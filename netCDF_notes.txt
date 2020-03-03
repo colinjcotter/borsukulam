@@ -1,0 +1,12 @@
+Open a netcdf file for reading
+
+rootgrp = netCDF4.Dataset("Feb1978_1200.nc", "r", format="NETCDF4")
+
+ordered dictionary of the variables
+
+rootgrp.variables
+
+numpy array containing the variable
+
+rootgrp['<variable name>'][:]
+
