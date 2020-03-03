@@ -40,12 +40,15 @@ t2 = numpy.flip(t2, axis=0)
 #construct an interpolator
 f = interpolate.RegularGridInterpolator((lat[:], long[:]), t-t2)
 
+ft = interpolate.RegularGridInterpolator((lat[:], long[:]), t)
+ft2 = interpolate.RegularGridInterpolator((lat[:], long[:]), t2)
+
 #make a function for the square of the interpolator
 
 def fsq(x):
     return f(x)**2
 
 #find a zero of f with initial guess x0
-x0 = numpy.array([0.,180.])
+x0 = numpy.array([30.,100.])
 ret = optimize.basinhopping(fsq, x0, niter=200)
 print(ret.x, ret.fun)
