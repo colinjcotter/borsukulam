@@ -1,6 +1,7 @@
 import netCDF4
 import numpy
 import scipy.interpolate as interpolate
+import scipy.optimize as optimize
 
 #open the file for reading
 rootgrp = netCDF4.Dataset("era40files/Feb1978_1200.nc", "r", format="NETCDF4")
@@ -39,4 +40,12 @@ t2 = numpy.flip(t2, axis=0)
 #construct an interpolator
 f = interpolate.RegularGridInterpolator((lat[:], long[:]), t-t2)
 
+#make a function for the square of the interpolator
 
+def fsq(x):
+    return f(x)**2
+
+#find a zero of f with initial guess x0
+x0 = numpy.array([0.,180.])
+ret = optimize.basinhopping(fsq, x0, niter=200)
+print(ret.x, ret.fun)
