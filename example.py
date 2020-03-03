@@ -1,4 +1,4 @@
-import netCDT4
+import netCDF4
 import numpy
 
 #open the file for reading
