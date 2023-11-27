@@ -1,9 +1,9 @@
 #
 # This does the following
 # 1. Scrape most recent data from ecmwf at steps 0h and 6
-# 2. Compute ulampoints at 1 minute intervals
+# 2. Compute ulampoints at 5 minute intervals
 # 3. Store these ulampoints to be used as an initial guess for the next time this file is run
-# 4. Creates a javascript file that contains (a) all the ulampoints that are found within tolerance
+# 4. Creates a javascript file that contains (a) some of the data from the ulampoints that are found within tolerance
 # (b) The temperature and pressure data at step 0h and at step 6h
 #
 # It is designed to be run every 3 hours about so that the website always loads with a few hours of ulampoints as data
@@ -25,6 +25,12 @@ latest_ulamlist_filename = ulamlistsfolder + 'latest_ulamlist.pickle'
 latest_bu_filename = 'website/bu.js'
 steps=[numpy.timedelta64(0,'h'), numpy.timedelta64(6,'h')]
 
+###
+### Note: To actually have the script do the scraping the following block must be uncommented
+###
+###
+
+
 # logging.info('Retrieving data from ECMWF')
 # client = Client()
 # result  = client.retrieve(
@@ -38,11 +44,16 @@ logging.info('Opening data from ECMWF')
 
 ds = xr.open_dataset('data.grib2',engine='cfgrib')
 
+# Todo: Convert the data to float to save space
+
 # The following tries to load data from the last time this file was run
 # and attempts to find an ulampoint close to the start time at step 0h
 # to feed as the initial guess of the numerical algorithm
 
+
+# The following is hardcoded just for testing
 initialguess = [9.51287637483811, 50.63705018119461]
+
 logging.info('Trying to get initial guess from previously stored data')
 try: 
 	ulamlist_initial = pickle.load(open(latest_ulamlist_filename, "rb"))
@@ -93,6 +104,7 @@ ds1=ds.sel(step=steps[1])
 bu = {
 'ds_datetime':  numpy.datetime_as_string(numpy.datetime64(ds.time.data, 'ms')), 
 'ulamlist': ulamlist_cropped,
+'final_timestep': numpy.timedelta64(ds1.step.data, 's').astype(float),
 't_initial': numpy.array(ds0['t2m'].data).tolist(),
 'p_initial': numpy.array(ds0['msl'].data).tolist(),
 't_final': numpy.array(ds1['t2m'].data).tolist(),
