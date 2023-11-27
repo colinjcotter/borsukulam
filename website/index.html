@@ -1,0 +1,478 @@
+<html lang="en">
+
+<head>
+<title>Borsuk–Ulam</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+<link href="https://api.mapbox.com/mapbox-gl-js/v2.11.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.11.0/mapbox-gl.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js" charset="utf-8"></script>
+<link href="style.css" rel="stylesheet">
+<script src="bu.js"></script>
+
+
+</style>
+  
+</head>
+
+
+<body>
+  <div id="container">
+    <div class="lds-spinner" id="spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
+
+    <div id="map"></div>
+    <div id="blurb" class="hidescrolling">
+    
+<!--  Name:<input type="text" id="myText" value="Mickey"> 
+    <button type="button" onclick="updatetimestep()">Try it</button> 
+    <p id="demo"></p>  -->
+
+    
+    
+
+</form>
+
+
+     <p class = "heading">What is this?</p>
+     
+      <p>The two maps on the left display opposite sides of the earth, and the bubbles show the temperature and air pressure at locations that are directly opposite each other.
+<p> Although you might not expect it, there are always two locations directly opposite each other with <i>exactly</i> the same temperature and pressure!
+<p>An example of two of these locations is shown on the map with blue and brown markers.  Click, drag and zoom the map to see for yourself...
+ <p class = "heading">What do the numbers in the bubbles mean?</p>
+<p> The temperature is the air temperature at 2 meters above the surface and is measured in degrees centigrade (C).  The pressure is the mean sea level pressure and is measured in kilo Pascals (kPa).  The latitude and longitude give the position of the location, measured in degrees.
+ <p class = "heading">Who discovered this?</p>
+  <p> The mathematics that underlies this fact is attributed to Karol Borsuk and Stanisław Ulam, and is now called the Borsuk-Ulam Theorem which is part of the field of Algebraic Topology.
+   <p class = "heading">Does this only work for temperature and air pressure?</p>
+  <p> Not at all! It also works for any other pairs of measurements, for example you could use temperature and humidity instead.    What is needed is that the measurements are "continuous" which means that if you move on the surface of the earth just a little bit then the measurement also changes by just a little bit.
+     <p class = "heading">Can you do this for three or more measurements?</p>
+     <p> You can only use two measurements on the surface of the earth, because the surface is two dimensional.  But mathematically speaking, you can consider a planet in four dimensional space whose surface will have three dimensions, and then there is a version of the Borsuk-Ulam Theorem that works for any three continuous measurements (similarly on a planet whose surface has four dimensions you can use four measurements and so on).
+     <p class = "heading">Where can I find out more?</p>
+   <p> There are plenty of places to find out more on the Borsuk-Ulam  Theorem, for instance <a href="https://en.wikipedia.org/wiki/Borsuk%E2%80%93Ulam_theorem" target=”_blank”>Wikipedia</a> or this <a href="https://www.youtube.com/watch?v=z75B8iP1Y3g" target=”_blank”>YouTube video</a>.   And if you want to know about the excitement of being a mathematician we recommend Stanisław Ulam's Book "<a href="https://www.goodreads.com/en/book/show/423246" target=”_blank”>Adventures of a Mathematician</a>".
+   <p class = "heading"> Where does the temperature and air pressure data come from?</p>
+   <p> We use the <a href="https://www.ecmwf.int/">ECMWF</a> reanalysis data, which is a blend of meteorological measurements and a forecast model to produce a best guess of what the state of the atmosphere is at a given time.   We then apply a simple interpolation to extend this data in a continuous way to give an estimate of the precise temperature and air pressure everywhere on the map.
+   
+    <p class = "heading"> How recent are the temperature and pressure data?</p>
+ <p>The temperature and pressure numbers are the best guess estimates on <span id="lastupdated">Error finding date</span>.  The maps update themselves automatically about every 5 minutes, at which point you may see the markers move since the temperature and pressure will have changed.
+   <p class = "heading"> Who made this? </p>
+   <p> <a href="https://www.imperial.ac.uk/people/colin.cotter" target="_blank">Colin Cotter</a> (Imperial College, London) and <a href="https://sites.google.com/uic.edu/juliusross/home" target="_blank">Julius Ross</a> (University of Illinois at Chicago, supported by NSF-DMS 1749447).  You can provide feedback, or access the source code <a href="more.html">here</a>.
+    </div>
+    <div id="map2"></div>
+</div>
+
+
+
+
+
+<script>
+
+
+    
+
+// Todo
+// Check the weather data against real data (have we flipped it all around?)
+// Check Date locale and understand what this is meaning
+// Locale and translation possibilities
+// Test on other devices
+
+
+
+function refreshupdatedtime()
+{
+   const options = {
+ dateStyle: 'full',
+  timeStyle: 'long',
+};
+// TODO convert to local time
+lastupdateddate = new Date(bu.ds_datetime+'Z'); 
+lastupdateparagraph = document.getElementById('lastupdated');
+text = Intl.DateTimeFormat(navigator.language,options).format(lastupdateddate)
+//lastupdateparagraph.innerText=String(lastupdated.toLocaleString(navigator.language,options))+' UTC'
+lastupdateparagraph.innerText=text
+}
+
+refreshupdatedtime()
+
+var temporarystep, temporaryi
+var map,map2
+
+window.onload = function () { mapBoxInit(); }
+
+// Returns anitpodal point of a point p
+function get_antipodal(p)
+{
+var antilat = -p.lat
+if (p.lng > 0){
+	var antilng = (180 - p.lng)*-1}
+else 
+  {var antilng = (-180 - p.lng)*-1	
+}
+return {lat: antilat, lng: antilng}	
+}
+	
+// Returns the temperature, pressure and popuplabel for a point p 
+// Hardcoded for a grid of size 0.4
+
+function getclimatevariables(p)
+{	
+lat = p.lat
+lng = p.lng
+
+
+//  Move the lat/long to beween [0,180) and [0,360)
+// ****** I really do not understand this +90 that we do here; I wonder if the translation 
+// from the python script is not working as expected
+var x = (lat+90)%180    
+var y =(lng)%360	
+if (y<0){ y=y+360}
+if (x<0){x=x+180}
+
+
+// get the ll grid coordinate (i,j) wrapping correctly
+var i = Math.floor(y/0.4)
+//y=y+450
+if (i==900){ i=0 } 
+
+var j = Math.floor(x/0.4)
+//j=j+225
+if (j==450){ j=0}  
+
+// get the ur grid coordinate (ip,jp) wrapping correctly
+var ip = i+1
+var jp = j+1	
+if (ip==900){ ip=0 } 
+if (jp==450){ jp=0 } 
+
+
+
+// get the distance to the grid coordinate
+var a = x/0.4-j
+var b = y/0.4-i
+
+
+// temperature and pressure
+var t = bu.t_initial
+var p = bu.p_initial
+
+
+
+// decide on the number of decimal places to round to
+zoom = map.getZoom();
+
+var temp_decimals
+var pressure_decimals
+var coordinate_decimals
+if (zoom<2)
+	{temp_decimals=1;pressure_decimals=1;coordinate_decimals=1 }
+else if (zoom<3)
+	{temp_decimals=2;pressure_decimals=2;coordinate_decimals=2 }
+else if (zoom<4)
+	{temp_decimals=3;pressure_decimals=3;coordinate_decimals=3}
+else if (zoom<5)
+	{temp_decimals=3; pressure_decimals=3;coordinate_decimals=4 }
+else
+	{temp_decimals=3; pressure_decimals=3;coordinate_decimals=5 }
+
+
+var temp_initial,temp_final
+var t = bu.t_initial
+var p = bu.p_initial
+// calculate the temperature at initial
+var temp_initial = (1-b)*((1-a)*t[j][i] + a*t[jp][i])  + b*((1-a)*t[j][ip] + a*t[jp][ip])
+var pressure_initial = (1-b)*((1-a)*p[j][i] + a*p[jp][i])  + b*((1-a)*p[j][ip] + a*p[jp][ip])
+
+var pressure_initial,pressure_final
+t = bu.t_final
+p = bu.p_final
+var temp_final = (1-b)*((1-a)*t[j][i] + a*t[jp][i])  + b*((1-a)*t[j][ip] + a*t[jp][ip])
+var pressure_final = (1-b)*((1-a)*p[j][i] + a*p[jp][i])  + b*((1-a)*p[j][ip] + a*p[jp][ip])
+
+var temp,pressure
+var delta = temporarystep/21600
+temp = delta * temp_final + (1- delta)* temp_initial
+pressure = delta * pressure_final + (1- delta)* pressure_initial
+
+// calculate the pressure
+//var pressure = (1-b)*((1-a)*p[j][i] + a*p[jp][i])  + b*((1-a)*p[j][ip] + a*p[jp][ip])
+//pressure = pressure/1000
+// calculate the temperature
+//var temp = (1-b)*((1-a)*t[j][i] + a*t[jp][i])  + b*((1-a)*t[j][ip] + a*t[jp][ip])
+// calculate the pressure
+//var pressure = (1-b)*((1-a)*p[j][i] + a*p[jp][i])  + b*((1-a)*p[j][ip] + a*p[jp][ip])
+
+temp=temp-273.15 // convert to centigrade			
+
+pressure = pressure/1000
+
+// get the textlabel to display as html	
+popuplabel =  'temperature: ' + String(temp.toFixed(temp_decimals))+'\u{00B0}C<br> pressure: ' + String(pressure.toFixed(pressure_decimals)) +'kPa'
+popuplabel =  popuplabel +'<br>'+'latitude: ' + String(lat.toFixed(coordinate_decimals)) + '\u{00B0}'+'<br>'+ 'longitude: ' +String(lng.toFixed(coordinate_decimals))+'\u{00B0}'
+
+return {temp: temp.toFixed(temp_decimals), pressure: pressure.toFixed(pressure_decimals),popuplabel: popuplabel}
+	
+}  
+
+var spinnerdiv = document.getElementById('spinner');
+
+		
+function updatetimestep() { 
+	
+  	spinnerdiv.style.display = 'inline-block';
+  	
+  	setTimeout(movemarkers, 2000);
+	
+	function movemarkers(){
+		// Todo: Automatically update every 5 minutes (but not if it is within 2 minutes of initialization)
+		temporaryi = temporaryi+3
+		console.log('temporaryi',temporaryi)
+		temporarystep = bu.ulamlist[temporaryi][0]	
+		console.log('temporarystep',temporarystep)
+		var counter=0
+		var timestep=20
+		var startLngLat,endLngLat
+		function animateMarker() {
+			/* 
+			Update the data to a new position 
+			based on the animation timestamp. 
+			The divisor in the expression `timestamp / 1000` 
+			controls the animation speed.
+			*/
+			a = counter/timestep
+			b = 1-a
+			marker1.setLngLat([a*ulam1.lng+b*startLngLatA.lng, a*ulam1.lat+b*startLngLatA.lat]);
+			marker3.setLngLat([a*ulam1.lng+b*startLngLatA.lng, a*ulam1.lat+b*startLngLatA.lat]);
+		
+			marker2.setLngLat([a*ulam2.lng+b*startLngLatB.lng, a*ulam2.lat+b*startLngLatB.lat]);
+			marker4.setLngLat([a*ulam2.lng+b*startLngLatB.lng, a*ulam2.lat+b*startLngLatB.lat]);
+			counter = counter +1
+			// Request the next frame of the animation.
+			if (counter<timestep+1)
+				{requestAnimationFrame(animateMarker);}
+			}
+ 
+
+	
+		 ulam1  = new mapboxgl.LngLat(bu.ulamlist[temporaryi][1][1],bu.ulamlist[temporaryi][1][0])
+		 ulam2  = get_antipodal(ulam1)
+		 startLngLatA = marker1.getLngLat()
+		 startLngLatB = marker2.getLngLat()
+ 
+		 requestAnimationFrame(animateMarker)
+		 updatepopuptexts()
+		 
+  		spinnerdiv.style.display = "none";
+		} 
+    }
+    
+    // create the popups
+	 const popup = new mapboxgl.Popup({
+		closeButton: false,
+		closeOnClick: false
+	  });
+	  
+	const popup2 = new mapboxgl.Popup({
+		closeButton: false,
+		closeOnClick: false
+	  });
+	  
+	var  popup_location, popup2_location
+ 
+	function updatepopuptexts(){
+	
+	var popup_climate = getclimatevariables(popup_location)
+	var popup2_climate = getclimatevariables(popup2_location)
+
+	popup.setHTML(popup_climate.popuplabel);
+	popup2.setHTML(popup2_climate.popuplabel);
+
+
+	//Highlight all popups if cursor is over ulam point
+	const elements = document.querySelectorAll('.mapboxgl-popup-content');
+	if ((popup_climate.temp  == popup2_climate.temp) && (popup_climate.pressure  ==	 		popup2_climate.pressure))
+	{
+	elements.forEach((element)=>element.classList.add("highlight"));
+	}
+	else
+	{
+	elements.forEach((element)=>element.classList.remove("highlight"));
+	}
+			
+	}
+	
+    
+    marker1 = new mapboxgl.Marker({color: "#9a9065"})
+    marker2 = new mapboxgl.Marker()
+    marker3 = new mapboxgl.Marker({color: "#9a9065"})
+    marker4 = new mapboxgl.Marker()
+    
+    
+    function mapBoxInit() {    
+    
+    spinnerdiv.style.display = 'inline-block';
+    
+    setTimeout( ()=> {spinnerdiv.style.display = 'none';} , 2000);
+    
+    
+      
+      // mapbox access token
+      mapboxgl.accessToken = 'pk.eyJ1IjoianVsaXVzcm9zcyIsImEiOiJjbHAwZHY4MmswN2s1MnFtcmtnaXpqMDJ0In0._ffXmhexSsJ5QYaxSOp8cQ';
+
+      // define the first map
+       map = new mapboxgl.Map({
+        container: 'map',
+        maxZoom: 12, 
+        minZoom: 1,
+        zoom: 0,
+        center: [0, 50],
+        style: 'mapbox://styles/juliusross/clp16b25v00vm01pe2pzgbebz',
+        projection: 'globe',
+      });
+
+
+
+      
+      // define the second map
+      map2 = new mapboxgl.Map({
+        container: 'map2',
+        maxZoom: 12, 
+        minZoom: 1,
+        zoom: 0,
+        center: [180, -50],
+        style: 'mapbox://styles/juliusross/clp16b25v00vm01pe2pzgbebz',
+		projection: 'globe',
+        hash: false
+      });
+
+
+	   
+	// these two variables are being used to keep track of the popup locations
+	// they should not really be used in this way but it is fine for now
+	 
+    popup_location= {'lat': 50, 'lng':10}
+	popup2_location = get_antipodal(popup_location)
+    // Add the markers for the pairs of ulam points
+    
+	
+	
+	// Next: Need to split this up and find the correct index based on the current time
+	
+	
+	
+	//ds_date = new Date(bu.ds_datetime)
+	//now = new Date()
+	//console.log('ds_date',ds_date)
+	//console.log('now',now)	
+	//difference = now - ds_date // measured in milliseconds
+	//console.log('difference',difference)
+
+
+	temporaryi = 4
+	temporarystep = bu.ulamlist[temporaryi][0]
+	
+	ulam1  = new mapboxgl.LngLat(bu.ulamlist[temporaryi][1][1],bu.ulamlist[temporaryi][1][0])
+	ulam2  = get_antipodal(ulam1)
+	
+	 map.on('load', () => {
+	 //marker1 = new mapboxgl.Marker({color: "#9a9065"}).setLngLat(ulam1).addTo(map);	
+	 marker1.setLngLat(ulam1).addTo(map);	
+	 marker2.setLngLat(ulam2).addTo(map);
+
+	 popup.setLngLat([popup_location.lng,popup_location.lat]).setHTML('test').addTo(map);
+	 updatepopuptexts()
+	 })
+	   
+	map2.on('load', () => {
+	 marker3.setLngLat(ulam1).addTo(map2);	
+	 marker4.setLngLat(ulam2).addTo(map2);	     		
+	 popup2.setLngLat([popup2_location.lng,popup2_location.lat]).addTo(map2);
+	 updatepopuptexts()
+	})
+	
+
+
+
+	   
+
+   
+	   
+	   
+      // Add zoom and rotation controls to the maps.
+      map.addControl(new mapboxgl.NavigationControl({showCompass: false}),'top-left');
+      map2.addControl(new mapboxgl.NavigationControl({showCompass: false}),'top-left');
+  
+      // coordination between the two maps
+      var disable = false;
+      map.on("move", function () {
+        if (!disable) {
+          var center = map.getCenter();
+          var zoom = map.getZoom();
+          var pitch = map.getPitch();
+          var bearing = map.getBearing();
+
+          disable = true;
+          var antipodal = get_antipodal(center)
+
+          map2.setCenter(antipodal); // need to change the center here to the anitpodal point
+          map2.setPitch(pitch);
+          map2.setZoom(zoom);
+          map2.setBearing(bearing);
+          disable = false;
+		  updatepopuptexts()
+        }
+      })
+
+      map2.on("move", function () {
+        if (!disable) {
+          var center = map2.getCenter();
+          var zoom = map2.getZoom();
+          var pitch = map2.getPitch();
+          var bearing = map2.getBearing();
+
+          disable = true;
+          
+          var antipodal = get_antipodal(center)
+          map.setCenter(antipodal); 
+          map.setZoom(zoom);
+          map.setPitch(pitch);
+          map.setBearing(bearing);
+          disable = false;
+          updatepopuptexts()
+        }
+      })
+      
+      
+      
+
+	  
+
+
+
+
+	// Show the popup when the cursor moves over each of the mapx
+	map.on('mousemove', (e) => {
+		popup_location=e.lngLat; 		  	
+		popup2_location=get_antipodal(e.lngLat);
+		popup.setLngLat(popup_location)
+		popup2.setLngLat(popup2_location)
+		updatepopuptexts()	
+		});
+	
+
+      
+      
+  map2.on('mousemove', (e) => {	
+  		popup2_location=e.lngLat; 		  	
+		popup_location=get_antipodal(popup2_location);
+		popup.setLngLat(popup_location)
+		popup2.setLngLat(popup2_location)
+		updatepopuptexts()	
+		});
+	
+  	
+    }
+    
+
+</script>
+
+</body>
+
+</html>
