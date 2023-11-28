@@ -35,7 +35,9 @@ logger.setLevel(logging.INFO)
 ulamlistsfolder = 'ulamlists/' 
 latest_ulamlist_filename = ulamlistsfolder + 'latest_ulamlist.pickle'
 latest_bu_filename = 'website/bu.js'
-steps=[numpy.timedelta64(0,'h'), numpy.timedelta64(6,'h')]
+firststep=12
+laststep=24
+steps=[numpy.timedelta64(firststep,'h'), numpy.timedelta64(laststep,'h')]
 
 ###
 ### Note: To actually have the script do the scraping the following block must be uncommented
@@ -45,16 +47,19 @@ steps=[numpy.timedelta64(0,'h'), numpy.timedelta64(6,'h')]
 logger.info("ECMWFscrape starting...")
 
 
-# logger.info('Retrieving data from ECMWF')
-# client = Client()
-# result  = client.retrieve(
-#     step=[0,6],
-#     type="cf",
-#     param = ["2t","msl"],
-#     target="data.grib2",
-# )
+logger.info('Retrieving data from ECMWF')
+client = Client()
+result  = client.retrieve(
+    step=[firststep,laststep],
+    type="cf",
+    param = ["2t","msl"],
+    date = '2023-11-28',
+    time = 0,
+    target="data.grib2",
+)
 
 logger.info("Opening data from ECMWF")
+#Todo: Ideally we log the output of this command
 ds = xr.open_dataset('data.grib2',engine='cfgrib')
 
 # Todo: Convert the data to float to save space
@@ -68,7 +73,6 @@ ds = xr.open_dataset('data.grib2',engine='cfgrib')
 #initialguess = [9.51287637483811, 50.63705018119461]
 
 initialguess = [0,0]
-
 logger.info('Trying to get initial guess from previously stored data')
 try: 
 	ulamlist_initial = pickle.load(open(latest_ulamlist_filename, "rb"))
@@ -86,7 +90,7 @@ except:
 #
 logger.info('Finding ulampoints')
 start = time.time()
-ulamlist = findulam.compute_ulampoints_between_timesteps(ds,steps=steps,N=12,initialguess=initialguess,tolerance=1e-10)
+ulamlist = findulam.compute_ulampoints_between_timesteps(ds,steps=steps,N=720,initialguess=initialguess,tolerance=1e-10)
 logger.info('Finding ulampoints completed in '+str(time.time()-start)+'s')
 #
 # Write the ulam points to a file for the next time this script is run
@@ -120,6 +124,7 @@ ds1=ds.sel(step=steps[1])
 bu = {
 'ds_datetime':  numpy.datetime_as_string(numpy.datetime64(ds.time.data, 'ms')), 
 'ulamlist': ulamlist_cropped,
+'initial_timestep': numpy.timedelta64(ds0.step.data, 's').astype(float),
 'final_timestep': numpy.timedelta64(ds1.step.data, 's').astype(float),
 't_initial': numpy.array(ds0['t2m'].data).tolist(),
 'p_initial': numpy.array(ds0['msl'].data).tolist(),
@@ -128,8 +133,9 @@ bu = {
 }
 f = open(latest_bu_filename , 'w' )
 logging.info('Writing bu.js file')
-f.write('const bu=' + json.dumps(bu)+'\n')
+f.write('var bu=' + json.dumps(bu)+'\n')
 f.close
 
 logger.info('Moving bu.js file to S3 bucket')
-subprocess.Popen(["aws", "s3", "cp", latest_bu_filename, " s3://ponderonward-website/bu_latest.js"], shell=True)
+#Todo: Ideally we log the output of this command
+subprocess.run(["aws s3 cp "+latest_bu_filename+" s3://ponderonward-website/bu_latest.js"], shell=True)
