@@ -1,14 +1,16 @@
 #
-# This does the following
-# 1. Scrape most recent data from ecmwf at steps 0h and 12h
-# 2. Compute ulampoints at 5 minute intervals
+# Usage: python3 ecmwfscrape.py --firststep 0 --laststep 12 --date 0 --time 6
+#
+# This will get data at two steps from 06:00UTC today as follows:
+#
+# 1. Scrape most recent data from ecmwf at steps firststep and laststep
+# 2. Compute ulampoints at certain intervals (hardcoded)
 # 3. Store these ulampoints to be used as an initial guess for the next time this file is run
 # 4. Creates a javascript file that contains (a) some of the data from the ulampoints that are found within tolerance
 # (b) The temperature and pressure data at step 0h and at step 6h
 # 5. Copy this javascript file to my Amazon S3 bucket
 #
-# It is designed to be run every 3 hours about so that the website always loads with a few hours of ulampoints as data
-#
+
 import logging 
 
 logging.basicConfig(filename = 'ecmwfscrape.log',format='%(asctime)s %(levelname)s  %(message)s',datefmt='%Y-%m-%d %H:%M:%S')
