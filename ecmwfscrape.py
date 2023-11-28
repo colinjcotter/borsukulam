@@ -1,6 +1,6 @@
 #
 # This does the following
-# 1. Scrape most recent data from ecmwf at steps 0h and 6
+# 1. Scrape most recent data from ecmwf at steps 0h and 12h
 # 2. Compute ulampoints at 5 minute intervals
 # 3. Store these ulampoints to be used as an initial guess for the next time this file is run
 # 4. Creates a javascript file that contains (a) some of the data from the ulampoints that are found within tolerance
@@ -13,7 +13,7 @@ import logging
 
 logging.basicConfig(filename = 'ecmwfscrape.log',format='%(asctime)s %(levelname)s  %(message)s',datefmt='%Y-%m-%d %H:%M:%S')
 
-
+import argparse
 from ecmwf.opendata import Client
 import xarray as xr
 import findulam
@@ -22,6 +22,7 @@ import json
 import pickle
 import subprocess
 import time
+import sys
 
 
 
@@ -29,14 +30,32 @@ import time
 
 
 logger = logging.getLogger(__name__)
+
+def my_handler(type, value, tb):
+	logger.exception("Uncaught exception: {0}",format(str(value)))
+
+sys.excepthook = my_handler
+
 logger.setLevel(logging.INFO)
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--firststep', dest='firststep', type=int, help='Firststep')
+parser.add_argument('--laststep', dest='laststep', type=int, help='Laststep')
+parser.add_argument('--date', dest='date', type=int, help='date')
+parser.add_argument('--time', dest='time', type=int, help='time')
+args = parser.parse_args()
+
+
+print(args)
 
 # The following should be adapted for the local filesystem structure
 ulamlistsfolder = 'ulamlists/' 
 latest_ulamlist_filename = ulamlistsfolder + 'latest_ulamlist.pickle'
 latest_bu_filename = 'website/bu.js'
-firststep=12
-laststep=24
+
+firststep = args.firststep
+laststep = args.laststep
+
 steps=[numpy.timedelta64(firststep,'h'), numpy.timedelta64(laststep,'h')]
 
 ###
@@ -53,8 +72,8 @@ result  = client.retrieve(
     step=[firststep,laststep],
     type="cf",
     param = ["2t","msl"],
-    date = '2023-11-28',
-    time = 0,
+    date = args.date,
+    time = args.time,
     target="data.grib2",
 )
 
@@ -138,4 +157,5 @@ f.close
 
 logger.info('Moving bu.js file to S3 bucket')
 #Todo: Ideally we log the output of this command
-subprocess.run(["aws s3 cp "+latest_bu_filename+" s3://ponderonward-website/bu_latest.js"], shell=True)
+subprocess=subprocess.run(["aws s3 cp "+latest_bu_filename+" s3://ponderonward-website/bu_latest.js"], shell=True)
+logger.info(subprocess)
