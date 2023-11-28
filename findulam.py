@@ -116,7 +116,7 @@ def findulam(t,p,lat,long,**kwargs):
 	
 	#find a zero of f with initialguess
 	xinit = numpy.array(initialguess)
-	ret = optimize.basinhopping(fsq, xinit,T=200,niter=100,callback=callback_func,disp=kwargs['basinhoppingdisplay'])
+	ret = optimize.basinhopping(fsq, xinit,T=1,niter=1000,callback=callback_func,disp=kwargs['basinhoppingdisplay'])
 		
 	output = {'OptimizeResult_basinhopping': ret,
 			  'fun' : ret.fun,
