@@ -5,7 +5,6 @@ import scipy.interpolate as interpolate
 import scipy.optimize as optimize
 import json
 
-
 # Functions to wrap longitude and latitude
 def wraplat(t):
 	return (t +90) % 180 - 90
@@ -216,7 +215,8 @@ def compute_ulampoints_between_timesteps(ds,**kwargs):
 		for i in range(N):
 			computedulam = compute_ulampoint_between_timesteps(ds,steps[j],steps[j+1],i,N,tolerance=tolerance,initialguess=initialguess)
 			ulamlist.append(computedulam)
-			print(computedulam['ulampoint'], computedulam['ulamtime'],computedulam['OptimizeResult_basinhopping'].fun,computedulam['OptimizeResult_basinhopping'].nit)
+			text=computedulam['ulampoint'], computedulam['ulamtime'],computedulam['ulamstep'],computedulam['OptimizeResult_basinhopping'].fun,computedulam['OptimizeResult_basinhopping'].nit
+			print(text)
 			initialguess = computedulam['ulampoint']
 	return(ulamlist)
 	

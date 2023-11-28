@@ -5,19 +5,22 @@
 # 3. Store these ulampoints to be used as an initial guess for the next time this file is run
 # 4. Creates a javascript file that contains (a) some of the data from the ulampoints that are found within tolerance
 # (b) The temperature and pressure data at step 0h and at step 6h
+# 5. Copy this javascript file to my Amazon S3 bucket
 #
 # It is designed to be run every 3 hours about so that the website always loads with a few hours of ulampoints as data
 #
-
+import logging 
 from ecmwf.opendata import Client
 import xarray as xr
 import findulam
 import numpy
 import json
 import pickle
-import logging
+import subprocess
 
-logging.basicConfig(filename = 'ecmwf-scraping.log',encoding = 'utf-8',level=logging.WARN)
+logging.basicConfig(filename = 'ecmwfscrape.log',format='%(asctime)s %(message)s', filemode='w')
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 # The following should be adapted for the local filesystem structure
 ulamlistsfolder = 'ulamlists/' 
@@ -31,7 +34,7 @@ steps=[numpy.timedelta64(0,'h'), numpy.timedelta64(6,'h')]
 ###
 
 
-# logging.info('Retrieving data from ECMWF')
+# logger.info('Retrieving data from ECMWF')
 # client = Client()
 # result  = client.retrieve(
 #     step=[0,6],
@@ -40,8 +43,7 @@ steps=[numpy.timedelta64(0,'h'), numpy.timedelta64(6,'h')]
 #     target="data.grib2",
 # )
 
-logging.info('Opening data from ECMWF')
-
+logger.info("Opening data from ECMWF")
 ds = xr.open_dataset('data.grib2',engine='cfgrib')
 
 # Todo: Convert the data to float to save space
@@ -52,30 +54,32 @@ ds = xr.open_dataset('data.grib2',engine='cfgrib')
 
 
 # The following is hardcoded just for testing
-initialguess = [9.51287637483811, 50.63705018119461]
+#initialguess = [9.51287637483811, 50.63705018119461]
 
-logging.info('Trying to get initial guess from previously stored data')
+initialguess = [0,0]
+
+logger.info('Trying to get initial guess from previously stored data')
 try: 
 	ulamlist_initial = pickle.load(open(latest_ulamlist_filename, "rb"))
 	ulamlist__initial_cropped = [ulam for ulam in ulamlist_initial if ((ulam['fun']< 1e-12) and (ulam['ulamtime']<ds.time.data))]
 	if len(ulamlist__initial_cropped)>0:
 		initialguess = ulamlist_initial_cropped[len(-1)]['ulampoint']
-		logging.info('Got initial guess ulampoint:'+str(ulamlist_initial_cropped[len(-1)]['ulampoint'])+'at ulamtime:'+str(ulamlist_initial_cropped[len(-1)]['ulamtime']))
+		logger.info('Got initial guess ulampoint:'+str(ulamlist_initial_cropped[len(-1)]['ulampoint'])+'at ulamtime:'+str(ulamlist_initial_cropped[len(-1)]['ulamtime']))
 	else: 
-		logging.warning('Unable to find any useful initial guess from previously stored data')
+		logger.warning('Unable to find any useful initial guess from previously stored data')
 except:
-	logging.warning('Unable to get load data from previous stored data')
+	logger.warning('Unable to get load data from previous stored data')
 
 #
 # This is where the computation is made
 #
-logging.info('Finding ulampoints')
+logger.info('Finding ulampoints')
 ulamlist = findulam.compute_ulampoints_between_timesteps(ds,steps=steps,N=72,initialguess=initialguess,tolerance=1e-10)
 
 #
 # Write the ulam points to a file for the next time this script is run
 #
-logging.info('Writing pickle')
+logger.info('Writing pickle')
 # Write the ulamlist as pickle
 ulamlist_filename = ulamlistsfolder+str(ds.time.data)+'.pickle'
 with open(ulamlist_filename, 'wb') as handle:
@@ -113,3 +117,6 @@ bu = {
 f = open(latest_bu_filename , 'w' )
 f.write('const bu=' + json.dumps(bu)+'\n')
 f.close
+
+
+subprocess.Popen(["aws", "s3", "cp", latest_bu_filename, "s3://ponderonward-website/bu_latest.js"], shell=True)
