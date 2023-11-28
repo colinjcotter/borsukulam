@@ -116,7 +116,7 @@ def findulam(t,p,lat,long,**kwargs):
 	
 	#find a zero of f with initialguess
 	xinit = numpy.array(initialguess)
-	ret = optimize.basinhopping(fsq, xinit,T=5,niter=100,callback=callback_func,disp=kwargs['basinhoppingdisplay'])
+	ret = optimize.basinhopping(fsq, xinit,T=200,niter=100,callback=callback_func,disp=kwargs['basinhoppingdisplay'])
 		
 	output = {'OptimizeResult_basinhopping': ret,
 			  'fun' : ret.fun,
@@ -220,7 +220,6 @@ def compute_ulampoints_between_timesteps(ds,**kwargs):
 			computedulam = compute_ulampoint_between_timesteps(ds,steps[j],steps[j+1],i,N,tolerance=tolerance,initialguess=initialguess)
 			ulamlist.append(computedulam)
 			text=computedulam['ulampoint'], computedulam['ulamtime'],computedulam['ulamstep'],computedulam['OptimizeResult_basinhopping'].fun,computedulam['OptimizeResult_basinhopping'].nit
-			print(text)
 			logger.info(text)
 			initialguess = computedulam['ulampoint']
 	return(ulamlist)
