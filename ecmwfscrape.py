@@ -10,6 +10,10 @@
 # It is designed to be run every 3 hours about so that the website always loads with a few hours of ulampoints as data
 #
 import logging 
+
+logging.basicConfig(filename = 'ecmwfscrape.log',format='%(asctime)s %(levelname)s  %(message)s',datefmt='%Y-%m-%d %H:%M:%S')
+
+
 from ecmwf.opendata import Client
 import xarray as xr
 import findulam
@@ -17,8 +21,13 @@ import numpy
 import json
 import pickle
 import subprocess
+import time
 
-logging.basicConfig(filename = 'ecmwfscrape.log',format='%(asctime)s %(message)s', filemode='w')
+
+
+
+
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -32,6 +41,8 @@ steps=[numpy.timedelta64(0,'h'), numpy.timedelta64(6,'h')]
 ### Note: To actually have the script do the scraping the following block must be uncommented
 ###
 ###
+
+logger.info("ECMWFscrape starting...")
 
 
 # logger.info('Retrieving data from ECMWF')
@@ -74,8 +85,9 @@ except:
 # This is where the computation is made
 #
 logger.info('Finding ulampoints')
-ulamlist = findulam.compute_ulampoints_between_timesteps(ds,steps=steps,N=72,initialguess=initialguess,tolerance=1e-10)
-
+start = time.time()
+ulamlist = findulam.compute_ulampoints_between_timesteps(ds,steps=steps,N=12,initialguess=initialguess,tolerance=1e-10)
+logger.info('Finding ulampoints completed in '+str(time.time()-start)+'s')
 #
 # Write the ulam points to a file for the next time this script is run
 #
@@ -97,7 +109,7 @@ with open(latest_ulamlist_filename , 'wb') as handle:
 
 ulamlist_cropped = [[numpy.timedelta64(ulam['ulamstep'], 's').astype(float),ulam['ulampoint']] for ulam in ulamlist if ulam['OptimizeResult_basinhopping'].fun<1e-8]
 
-logging.info('ulamlist length: '+ str(len(ulamlist))+ ' of which '+ str(len(ulamlist))+ ' were found within tolerance')
+logger.info('ulamlist length: '+ str(len(ulamlist))+ ' of which '+ str(len(ulamlist_cropped))+ ' were found within tolerance')
 
 ## Todo: Only write the bu file if there is at least one ulam point found within the first hour of the ds.date (we expect this should always happen
 ## so it is a safeguard as we are updating the bu.js file An hour after UTC.  This will prevent a bu.js file that only has ulam points in the future
@@ -115,8 +127,9 @@ bu = {
 'p_final': numpy.array(ds1['msl'].data).tolist()
 }
 f = open(latest_bu_filename , 'w' )
+logging.info('Writing bu.js file')
 f.write('const bu=' + json.dumps(bu)+'\n')
 f.close
 
-
+logger.info('Moving bu.js file to S3 bucket')
 subprocess.Popen(["aws", "s3", "cp", latest_bu_filename, "s3://ponderonward-website/bu_latest.js"], shell=True)
