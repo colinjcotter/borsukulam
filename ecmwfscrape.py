@@ -132,4 +132,4 @@ f.write('const bu=' + json.dumps(bu)+'\n')
 f.close
 
 logger.info('Moving bu.js file to S3 bucket')
-subprocess.Popen(["aws", "s3", "cp", latest_bu_filename, "s3://ponderonward-website/bu_latest.js"], shell=True)
+subprocess.Popen(["aws", "s3", "cp", latest_bu_filename, " s3://ponderonward-website/bu_latest.js"], shell=True)
