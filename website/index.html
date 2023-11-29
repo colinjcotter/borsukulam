@@ -23,14 +23,13 @@
     <div id="map"></div>
     <div id="blurb" class="hidescrolling">
     
-  Input:<input type="text" id="myText" value="Tue Nov 28 2023 07:10:00Z"> 
-    <button type="button" onclick="manuallyupdatetime()">Move Time!</button> 
+<!--  Input:<input type="text" id="myText" value="Tue Nov 28 2023 07:10:00Z"> 
+    <button type="button" onclick="manuallyupdatetime()">Move Time!</button> -->
 
 </form>
 
 
      <p class = "heading">What is this?</p>
-     
       <p>The two maps on the left display opposite sides of the earth, and the bubbles show the temperature and air pressure at locations that are directly opposite each other.
 <p> Although you might not expect it, there are always two locations directly opposite each other with <i>exactly</i> the same temperature and pressure!
 <p>An example of two of these locations is shown on the map with blue and brown markers.  Click, drag and zoom the map to see for yourself...
@@ -48,17 +47,12 @@
    <p> We use the <a href="https://www.ecmwf.int/">ECMWF</a> reanalysis data, which is a blend of meteorological measurements and a forecast model to produce a best guess of what the state of the atmosphere is at a given time.   We then apply a simple interpolation to extend this data in a continuous way to give a precise estimate of the temperature and air pressure everywhere on the map.
    
     <p class = "heading"> How recent are the temperature and pressure data?</p>
- <p>The temperature and pressure numbers are the best guess estimates on <span id="lastupdated">Error finding date</span>.  The maps update themselves automatically (usually about every 5 minutes), at which point you may see the markers move since the temperature and pressure will have changed.
+ <p>The temperature and pressure numbers are the best guess estimates on <span id="lastupdated">Error finding date</span>.  The maps update themselves automatically (usually every minute), at which point you may see the markers move since the temperature and pressure will have changed.
    <p class = "heading"> Who made this? </p>
    <p> <a href="https://www.imperial.ac.uk/people/colin.cotter" target="_blank">Colin Cotter</a> (Imperial College, London) and <a href="https://sites.google.com/uic.edu/juliusross/home" target="_blank">Julius Ross</a> (University of Illinois at Chicago, supported by NSF-DMS 1749447).  You can provide feedback, or access the source code <a href="more.html">here</a>.
     </div>
     <div id="map2"></div>
 </div>
-
-
-
-
-
 <script>
 
 
@@ -69,9 +63,8 @@
 // Test on other devices
 // Round time to nearest minute
 // Test fallback
-// Document the code better
 // Test scripts running every 6 hours
-// Move scripts to amazon
+// Move scripts to aws
 
 
 //
@@ -94,50 +87,61 @@ const popup2 = new mapboxgl.Popup({
 	closeOnClick: false
   });
 
+// Other global variables
 var temporarystep, temporaryi	// These need to be renamed.  Could we even remove them?
 var automaticupdates = true	// Set to true in normal circumstances so data will update every minute.  
 var spinnerdiv = document.getElementById('spinner');  // Used for the spinner that appears when updating the time at which data is being shown
 var  popup_location, popup2_location  // global variables that store the location of the two popups.  I guess with better programming these could be removed
 
+window.onload = function () { mapBoxInit(); }
+
 // 
 // Functions
 // 
 
-function refreshupdatedtime(){
-//
-// Updates the html that shows when the data was last updated
-//
-  const options = {
-  dateStyle: 'full',
-  timeStyle: 'long',
+function roundToNearestMinute(date) 
+{
+	//
+	// Rounds a date to the nearest minute
+	//
+    var coeff = 1000 * 60 * 1; // <-- Replace {5} with interval
+    return new Date(Math.round(date.getTime() / coeff) * coeff);
 };
-lastupdateddate = new Date(bu.ds_datetime+'Z')
-lastupdateddate.setSeconds(lastupdateddate.getSeconds() + temporarystep)
-lastupdateparagraph = document.getElementById('lastupdated');
-text = Intl.DateTimeFormat(navigator.language,options).format(lastupdateddate)
-lastupdateparagraph.innerText=text
-}
 
-
-
-window.onload = function () { mapBoxInit(); }
-
+function refreshupdatedtime()
+	{
+	//
+	// Updates the html that shows when the data was last updated
+	//
+	  const options = {
+	  dateStyle: 'full',
+	  timeStyle: 'long',
+	};
+	// Take the ds_datetime and add to it the current timestep (in seconds)
+	lastupdateddate = new Date(bu.ds_datetime+'Z')
+	lastupdateddate.setSeconds(lastupdateddate.getSeconds() + temporarystep)
+	// Then round to the nearest minute
+	lastupdateddate=roundToNearestMinute(lastupdateddate)
+	// Now update the html
+	lastupdateparagraph = document.getElementById('lastupdated');
+	text = Intl.DateTimeFormat(navigator.language,options).format(lastupdateddate)
+	lastupdateparagraph.innerText=text
+	}
 
 function get_antipodal(p)
-{
-//
-// Returns anitpodal point of a point p
-//
-var antilat = -p.lat
-if (p.lng > 0){
-	var antilng = (180 - p.lng)*-1}
-else 
-  {var antilng = (-180 - p.lng)*-1	
-}
-return {lat: antilat, lng: antilng}	
-}
+	{
+	//
+	// Returns anitpodal point of a point p
+	//
+	var antilat = -p.lat
+	if (p.lng > 0){
+		var antilng = (180 - p.lng)*-1}
+	else 
+	  {var antilng = (-180 - p.lng)*-1	
+	}
+	return {lat: antilat, lng: antilng}	
+	}
 	
-
 function getclimatevariables(p)
 	{	
 	// 
@@ -278,9 +282,6 @@ function updatetime()
 	
 }
 
-
-
-
 function calculatetimestep(now)
 	{
 	//
@@ -368,8 +369,6 @@ function updatetimestep()
 		} 
     }
     
-
- 
 function updatepopuptexts()
 	{
 	// 
@@ -395,10 +394,7 @@ function updatepopuptexts()
 	}
 		
 	}
-	
-
-    
-    
+	   
 function mapBoxInit() 
 	{    
 	//
