@@ -107,7 +107,7 @@ logger.info('ulamlist length: '+ str(len(ulamlist))+ ' of which '+ str(len(ulaml
 # Write the two filenames
 #
 
-bu_filename = 'bu-'+numpy.datetime_as_string(ds.time.data,'D')+'-'+str(firststep)+'-'+str(laststep)+'.js'
+bu_filename = 'bu-'+numpy.datetime_as_string(ds.time.data,'D')+'T'+ str(time)+'h:'+str(firststep)+':'+str(laststep)+'.js'
 bu_local_filename = bu_local_directory+bu_filename
 
 ds0=ds.sel(step=steps[0])
