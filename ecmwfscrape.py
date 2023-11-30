@@ -144,7 +144,7 @@ if (args.s3dryrun==0):
 	s3bufilesdirectory = "s3://bursk-ulam-bufiles/"
 
 	logger.info('Compressing '+str(bu_local_filename))
-	subprocessoutput=subprocess.run(["gzip -9 '+bu_local_filename], shell=True)
+	subprocessoutput=subprocess.run(['gzip -9 '+bu_local_filename], shell=True)
 	logger.info(subprocessoutput)
 	
 	logger.info('Writing bu_local_filename '+str(bu_local_filename)+' to S3 bucket '+str(s3bufilesdirectory))
