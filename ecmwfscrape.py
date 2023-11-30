@@ -130,7 +130,7 @@ f.close
 
 bu_datafile = bu_local_directory+'bu-latest-data.js'
 with open(bu_datafile, 'w') as file:
-	file.write('const bulatestdatafilename='+bu_filename)
+	file.write('const bulatestdatafilename="'+bu_filename+'"')
 
 
 s3websitedirectory = "s3://ponderonward-website/Borsuk-Ulam/"
