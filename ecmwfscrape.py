@@ -41,7 +41,7 @@ parser.add_argument('--laststep', dest='laststep', type=int, help='Laststep',def
 parser.add_argument('--date', dest='date', type=int, help='date',default =0)
 parser.add_argument('--time', dest='time', type=int, help='time',default =0)
 parser.add_argument('--scrapedryrun', dest='scrapedryrun', type=int, default=0, help='if nonzero then do not download from ECMWF but assume data.grib2 is already there (for testing only)')
-parser.add_argument('--website-directory',dest='bu_local_directory',type=str,default = "./website/",help='directory to store js files produced from this script')
+parser.add_argument('--bu-directory',dest='bu_local_directory',type=str,default = "./website/bufiles/",help='directory to store js files produced from this script')
 parser.add_argument('--N',dest='N', type=int,default=720,help='Number of ulampoints to compute (default 720 which is 1 per minute for 12 hours')
 parser.add_argument('--s3dryrun',dest='s3dryrun',type=int, default=0, help='if nonzero then do not try to move files to s3 buckets but assume data.grib2 is already there (for testing only)')
 parser.add_argument('--logfile',dest='logfile',type=str, default = 'ecmwfscrape.log',help='logfile to use')
