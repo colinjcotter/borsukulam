@@ -49,10 +49,9 @@ def findulam(t,p,lat,long,**kwargs):
 	"""
 	
 	# Set default arguments
-	defaultKwargs = { 'initialguess': [-32.0,10.0], 'tolerance': 1e-13, 'basinhoppingdisplay': False}
+	defaultKwargs = { 'tolerance': 1e-13, 'basinhoppingdisplay': False}
 	kwargs = { **defaultKwargs, **kwargs }
 	
-	initialguess = kwargs['initialguess']
 	tolerance = kwargs['tolerance']
 	#get some dimension sizes
 	nlong = long.size
@@ -110,16 +109,21 @@ def findulam(t,p,lat,long,**kwargs):
 		else:
 			return False
 	
-	#Try basinhopping to get a zero with an initial guess
-	xinit = numpy.array(initialguess)	
-	ret = optimize.basinhopping(fsq, xinit,T=2,niter=100,callback=callback_func,disp=kwargs['basinhoppingdisplay'])
 
+		
+	skip_optimizing_with_differential_evolution=False
 	
-	
-
-	if (ret.fun>tolerance):
-		logger.info('Basinhopping failed.  Runnning differential_evolution instead')
-		logger.info(ret)
+	if 'initialguess' in kwargs:
+		xinit = numpy.array(kwargs['initialguess'])	
+		ret = optimize.basinhopping(fsq, xinit,T=2,niter=100,callback=callback_func,disp=kwargs['basinhoppingdisplay'])
+		if (ret.fun<tolerance):
+			skip_optimizing_with_differential_evolution = True
+		else:
+			logger.info('Basinhopping failed to get within tolerance')
+			logger.info(ret)
+			
+	if skip_optimizing_with_differential_evolution==False:
+		logger.info('Runnning differential_evolution')
 		bounds = [(-90.0,90.0),(-180.0,180.0)]	
 		ret = optimize.differential_evolution(fsq, bounds)
 		
@@ -155,7 +159,7 @@ def compute_ulampoint_between_timesteps(ds,timestep_start,timestep_end,i,N,**kwa
 	timestep_end - Final time step to use within ds source file
 	i,N - Return ulampoint from temperature and pressure data linearly interpolated at time (1-i/N)*timestep_start + (i/N)*timestep_end
 		(requires i between 0 and N)
-	initialguess (optional) - initial point as [lat,long] for the numerical method (default [-32,10])
+	initialguess (optional) - initial point as [lat,long] for the numerical method
 	
 	Returns array consisting of
 	'ulampoint' - [lat,lng] of the ulampoint found
@@ -166,10 +170,10 @@ def compute_ulampoint_between_timesteps(ds,timestep_start,timestep_end,i,N,**kwa
 	# Todo: Return error if i is not between 0 and N
 	
 	
-	defaultKwargs = { 'initialguess': [-32.0,10.0], 'tolerance': 1e-13}
+	defaultKwargs = {'tolerance': 1e-13}
 	kwargs = { **defaultKwargs, **kwargs }
 
-	
+	tolerance = kwargs['tolerance']
 	ds0=ds.sel(step=timestep_start)
 	ds1=ds.sel(step=timestep_end)
 	
@@ -179,7 +183,14 @@ def compute_ulampoint_between_timesteps(ds,timestep_start,timestep_end,i,N,**kwa
 	t = (i/N) * ds1['t2m'].data + (N-i)/N * ds0['t2m'].data	
 	p = (i/N) * ds1['msl'].data + (N-i)/N * ds0['msl'].data
 	
-	ulam = findulam(t,p,ds0['latitude'],ds0['longitude'],initialguess=kwargs['initialguess'],tolerance = kwargs['tolerance'])
+	parameters = {
+			'tolerance':tolerance,
+			}
+			
+	if 'initialguess' in kwargs:
+		parameters['initialguess']=kwargs['initialguess']
+
+	ulam = findulam(t,p,ds0['latitude'],ds0['longitude'],**parameters)
 	
 	#Note: This output should be the same as that in the case of N=1 of compute_ulampoints_between_timesteps (better to use a class)
 	output = {
@@ -191,6 +202,10 @@ def compute_ulampoint_between_timesteps(ds,timestep_start,timestep_end,i,N,**kwa
 	}
 	
 	return(output)
+
+#
+# Todo: find a way to optionally pass the initialguess parameter
+#
 
 def compute_ulampoints_between_timesteps(ds,**kwargs):
 	""" Returns an array of ulamdata objects.  
@@ -207,12 +222,12 @@ def compute_ulampoints_between_timesteps(ds,**kwargs):
 	
 	"""
 
-	defaultKwargs = { 'initialguess': [-32.0,10.0],'N': 1, 'steps': ds.step.data, 'tolerance': 1e-13}
+	defaultKwargs = {'N': 1, 'steps': ds.step.data, 'tolerance': 1e-13}
 	kwargs = { **defaultKwargs, **kwargs }
 	
 	N = kwargs['N']
 	steps = kwargs['steps']
-	initialguess = kwargs['initialguess']
+	#initialguess = kwargs['initialguess']
 	tolerance = kwargs['tolerance']
 	ulamlist = []
 	
@@ -222,7 +237,14 @@ def compute_ulampoints_between_timesteps(ds,**kwargs):
 	
 	for j in range(len(steps)-1):
 		for i in range(N):
-			computedulam = compute_ulampoint_between_timesteps(ds,steps[j],steps[j+1],i,N,tolerance=tolerance,initialguess=initialguess)
+		
+			parameters = {
+			'tolerance':tolerance,
+			}
+			if 'initialguess' in locals():
+				parameters['initialguess']=initialguess	
+				
+			computedulam = compute_ulampoint_between_timesteps(ds,steps[j],steps[j+1],i,N,**parameters)
 			ulamlist.append(computedulam)
 			text=computedulam['ulampoint'], computedulam['ulamtime'],computedulam['ulamstep'],computedulam['OptimizeResult_basinhopping'].fun,computedulam['OptimizeResult_basinhopping'].nit
 			logger.info(text)
