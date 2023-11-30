@@ -11,9 +11,10 @@
 #
 #
 # Todo
-# Option for scraping
+# Option for scraping or run dummy
+# Better location of logfiles
+# bu_local_directory as option
 # Option for data.grib file location
-# Automatic rotation of filename
 
 
 import logging 
@@ -32,7 +33,6 @@ import sys
 
 # The following should be adapted for the local filesystem structure
 #bu_local_directory = '/home/ubuntu/borsuk-ulam/website/'
-bu_local_directory = './website/'
 # Script tries to find ulampoints within this tolerance
 tolerance = 1e-10
 
@@ -45,13 +45,17 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--firststep', dest='firststep', type=int, help='Firststep')
-parser.add_argument('--laststep', dest='laststep', type=int, help='Laststep')
-parser.add_argument('--date', dest='date', type=int, help='date')
-parser.add_argument('--time', dest='time', type=int, help='time')
+parser.add_argument('--firststep', dest='firststep', type=int, help='Firststep',default=0)
+parser.add_argument('--laststep', dest='laststep', type=int, help='Laststep',default=6)
+parser.add_argument('--date', dest='date', type=int, help='date',default =0)
+parser.add_argument('--time', dest='time', type=int, help='time',default =0)
+parser.add_argument('--scrapedryrun', dest='scrapedryrun', type=int, default=0, help='if nonzero then do not download from ECMWF but assume data.grib2 is already there (for testing only)')
+parser.add_argument('--website-directory',dest='bu_local_directory',type=str,default = "./website/",help='directory to store js files produced from this script')
+parser.add_argument('--N',dest='N', type=int,default=720,help='Number of ulampoints to compute (default 720 which is 1 per minute for 12 hours')
+parser.add_argument('--s3dryrun',dest='s3dryrun',type=int, default=0, help='if nonzero then do not try to move files to s3 buckets but assume data.grib2 is already there (for testing only)')
 args = parser.parse_args()
 
-
+bu_local_directory  = args.bu_local_directory
 
 # Initialize Data
 firststep = args.firststep
@@ -65,19 +69,19 @@ steps=[numpy.timedelta64(firststep,'h'), numpy.timedelta64(laststep,'h')]
 logger.info("ECMWFscrape starting...")
 
 
-logger.info('Retrieving data from ECMWF')
-client = Client()
-result  = client.retrieve(
-    step=[firststep,laststep],
-    type="cf",
-    param = ["2t","msl"],
-    date = args.date,
-    time = args.time,
-    target="data.grib2",
-)
+if (args.scrapedryrun==0):
+	logger.info('Retrieving data from ECMWF')
+	client = Client()
+	result  = client.retrieve(
+		step=[firststep,laststep],
+		type="cf",
+		param = ["2t","msl"],
+		date = args.date,
+		time = args.time,
+		target="data.grib2",
+	)
 
 logger.info("Opening data from ECMWF")
-
 #Todo: Ideally we log the output of this command
 
 ds = xr.open_dataset('data.grib2',engine='cfgrib')
@@ -86,8 +90,9 @@ ds = xr.open_dataset('data.grib2',engine='cfgrib')
 # This is where the computation is made
 #
 logger.info('Finding ulampoints')
+N=args.N
 start = time.time()
-ulamlist = findulam.compute_ulampoints_between_timesteps(ds,steps=steps,N=10,tolerance=tolerance)
+ulamlist = findulam.compute_ulampoints_between_timesteps(ds,steps=steps,N=N,tolerance=tolerance)
 logger.info('Finding ulampoints completed in '+str(time.time()-start)+'s')
 
 
@@ -133,14 +138,15 @@ with open(bu_datafile, 'w') as file:
 	file.write('const bulatestdatafilename="'+bu_filename+'"')
 
 
-s3websitedirectory = "s3://ponderonward-website/Borsuk-Ulam/"
-logger.info('Writing bu_datafile '+str(bu_datafile)+' to S3 bucket '+str(s3websitedirectory))
-subprocessoutput=subprocess.run(["aws s3 cp "+bu_datafile+' '+s3websitedirectory+'bu-latest-data.js'], shell=True)
-logger.info(subprocessoutput)
+if (args.s3dryrun==0):
+	s3websitedirectory = "s3://ponderonward-website/Borsuk-Ulam/"
+	logger.info('Writing bu_datafile '+str(bu_datafile)+' to S3 bucket '+str(s3websitedirectory))
+	subprocessoutput=subprocess.run(["aws s3 cp "+bu_datafile+' '+s3websitedirectory+'bu-latest-data.js'], shell=True)
+	logger.info(subprocessoutput)
 
-s3bufilesdirectory = "s3://bursk-ulam-bufiles/"
-logger.info('Writing bu_local_filename '+str(bu_local_filename)+' to S3 bucket '+str(s3bufilesdirectory))
+	s3bufilesdirectory = "s3://bursk-ulam-bufiles/"
+	logger.info('Writing bu_local_filename '+str(bu_local_filename)+' to S3 bucket '+str(s3bufilesdirectory))
 
-subprocessoutput=subprocess.run(["aws s3 cp "+bu_local_filename+' '+s3bufilesdirectory], shell=True)
-logger.info(subprocessoutput)
+	subprocessoutput=subprocess.run(["aws s3 cp "+bu_local_filename+' '+s3bufilesdirectory], shell=True)
+	logger.info(subprocessoutput)
 
