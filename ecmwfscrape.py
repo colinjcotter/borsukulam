@@ -142,8 +142,12 @@ if (args.s3dryrun==0):
 	logger.info(subprocessoutput)
 
 	s3bufilesdirectory = "s3://bursk-ulam-bufiles/"
-	logger.info('Writing bu_local_filename '+str(bu_local_filename)+' to S3 bucket '+str(s3bufilesdirectory))
 
-	subprocessoutput=subprocess.run(["aws s3 cp "+bu_local_filename+' '+s3bufilesdirectory], shell=True)
+	logger.info('Compressing '+str(bu_local_filename))
+	subprocessoutput=subprocess.run(["gzip -9 '+bu_local_filename], shell=True)
+	logger.info(subprocessoutput)
+	
+	logger.info('Writing bu_local_filename '+str(bu_local_filename)+' to S3 bucket '+str(s3bufilesdirectory))
+	subprocessoutput=subprocess.run(["aws s3 cp "+bu_local_filename+'.gz'+' '+s3bufilesdirectory+' --content-encoding gzip'], shell=True)
 	logger.info(subprocessoutput)
 
