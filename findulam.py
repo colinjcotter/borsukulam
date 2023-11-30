@@ -5,7 +5,6 @@ import scipy.interpolate as interpolate
 import scipy.optimize as optimize
 import json
 import logging
-from shgo import shgo
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
