@@ -140,5 +140,7 @@ logger.info('Moving '+str(bu_local_filename)+' file to S3 bucket')
 subprocess=subprocess.run(["aws s3 cp "+bu_local_filename+' '+s3file], shell=True)
 logger.info(subprocess)
 logger.info('Moving bu-latest.js to S3 bucket')
-subprocess2=subprocess.run(["aws s3 cp "+bu_local_directory+"bu-latest.js "+s3filedirectory+"bu-latest.js"], shell=True)
+command = "aws s3 cp "+bu_local_directory+"bu-latest.js "+s3filedirectory+"bu-latest.js"
+print('command',command)
+subprocess2=subprocess.run([command], shell=True)
 logger.info(subprocess2)
