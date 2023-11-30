@@ -186,7 +186,7 @@ def compute_ulampoint_between_timesteps(ds,timestep_start,timestep_end,i,N,**kwa
 	'fun' : ulam['fun'],
 	'ulamstep': ulamstep,
 	'ulamtime':ulamtime,
-	'OptimizeResult_basinhopping': ulam['OptimizeResult_basinhopping']
+	'OptimizeResult': ulam['OptimizeResult']
 	}
 	
 	return(output)
@@ -229,7 +229,7 @@ def compute_ulampoints_between_timesteps(ds,**kwargs):
 				
 			computedulam = compute_ulampoint_between_timesteps(ds,steps[j],steps[j+1],i,N,**parameters)
 			ulamlist.append(computedulam)
-			text=computedulam['ulampoint'], computedulam['ulamtime'],computedulam['ulamstep'],computedulam['OptimizeResult_basinhopping'].fun,computedulam['OptimizeResult_basinhopping'].nit
+			text=computedulam['ulampoint'], computedulam['ulamtime'],computedulam['ulamstep'],computedulam['OptimizeResult'].fun,computedulam['OptimizeResult'].nit
 			logger.info(text)
 			initialguess = computedulam['ulampoint']
 	return(ulamlist)
