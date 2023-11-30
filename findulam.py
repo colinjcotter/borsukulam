@@ -1,3 +1,8 @@
+#Todo:
+#Allow for optional data from the ds source; else the first two data sources should be used
+#Options for logging
+
+
 import netCDF4
 import xarray as xr
 import numpy
@@ -19,10 +24,6 @@ def wraplong(t):
 def wraplatlong(x):
 	return [wraplat(x[0]),wraplong(x[1])]
 
-#Todo:
-#Define an ulampoint class
-#Optional tolerances
-#Allow for optional data from the ds source; else the first two data sources should be used
 
 
 def findulam(t,p,lat,long,**kwargs):
