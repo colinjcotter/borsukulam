@@ -31,8 +31,8 @@ import time
 import sys
 
 # The following should be adapted for the local filesystem structure
-bu_local_directory = '/home/ubuntu/borsuk-ulam/website/'
-#bu_local_directory = './'
+#bu_local_directory = '/home/ubuntu/borsuk-ulam/website/'
+bu_local_directory = './website/'
 # Script tries to find ulampoints within this tolerance
 tolerance = 1e-10
 
@@ -87,7 +87,7 @@ ds = xr.open_dataset('data.grib2',engine='cfgrib')
 #
 logger.info('Finding ulampoints')
 start = time.time()
-ulamlist = findulam.compute_ulampoints_between_timesteps(ds,steps=steps,N=720,tolerance=tolerance)
+ulamlist = findulam.compute_ulampoints_between_timesteps(ds,steps=steps,N=10,tolerance=tolerance)
 logger.info('Finding ulampoints completed in '+str(time.time()-start)+'s')
 
 
@@ -123,24 +123,24 @@ bu = {
 't_final': numpy.array(ds1['t2m'].data).tolist(),
 'p_final': numpy.array(ds1['msl'].data).tolist()
 }
-f = open(bu_local_filename , 'w' )
+f = open(bu_local_filename, 'w' )
 logging.info('Writing bu.js file')
 f.write('var bu=' + json.dumps(bu)+'\n')
 f.close
 
+bu_datafile = bu_local_directory+'bu-latest.data.js'
+with open(bu_datafile, 'w') as file:
+	file.write('const bu-latestdata-filename='+bu_filename)
 
-#Todo: Ideally we log the output of these command
-#Todo: Move these parts to another script
-s3filedirectory = " s3://ponderonward-website/Borsuk-Ulam/"
-s3file = s3filedirectory + bu_filename
-logger.info('Writing bu-latest.js')
-with open(bu_local_directory+'bu-latest.js', 'w') as file:
-	file.write('<script src="'+s3file+'"</script>')
-logger.info('Moving '+str(bu_local_filename)+' file to S3 bucket')
-subprocessoutput=subprocess.run(["aws s3 cp "+bu_local_filename+' '+s3file], shell=True)
+
+s3websitedirectory = "s3://ponderonward-website/Borsuk-Ulam/"
+logger.info('Writing bu_datafile '+str(bu_datafile)+' to S3 bucket '+str(s3websitedirectory))
+subprocessoutput=subprocess.run(["aws s3 cp "+bu_datafile+' '+s3websitedirectory], shell=True)
 logger.info(subprocessoutput)
-logger.info('Moving bu-latest.js to S3 bucket')
-command = "aws s3 cp "+bu_local_directory+"bu-latest.js "+s3filedirectory+"bu-latest.js"
-print('command',command)
-subprocessoutput=subprocess.run([command], shell=True)
+
+s3bufilesdirectory = "s3://ponderonward-website/Borsuk-Ulam/"
+logger.info('Wriing bu_local_filename '+str(bu_local_filename)+' to S3 bucket '+str(s3bufilesdirectory))
+
+subprocessoutput=subprocess.run(["aws s3 cp "+bu_local_filename+' '+s3bufilesdirectory], shell=True)
 logger.info(subprocessoutput)
+
