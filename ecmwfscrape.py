@@ -1,5 +1,5 @@
 #
-# Usage: python3 ecmwfscrape.py --firststep 0 --laststep 12 --date 0 --time 6
+# Usage: 
 #
 # This will get data at two steps from 06:00UTC today as follows:
 #
@@ -128,9 +128,9 @@ logging.info('Writing bu.js file')
 f.write('var bu=' + json.dumps(bu)+'\n')
 f.close
 
-bu_datafile = bu_local_directory+'bu-latest.data.js'
+bu_datafile = bu_local_directory+'bu-latest-data.js'
 with open(bu_datafile, 'w') as file:
-	file.write('const bu-latestdata-filename='+bu_filename)
+	file.write('const bulatestdatafilename='+bu_filename)
 
 
 s3websitedirectory = "s3://ponderonward-website/Borsuk-Ulam/"
