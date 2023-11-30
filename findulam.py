@@ -5,6 +5,7 @@ import scipy.interpolate as interpolate
 import scipy.optimize as optimize
 import json
 import logging
+from shgo import shgo
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -52,12 +53,9 @@ def findulam(t,p,lat,long,**kwargs):
 	kwargs = { **defaultKwargs, **kwargs }
 	
 	initialguess = kwargs['initialguess']
-	
+	tolerance = kwargs['tolerance']
 	#get some dimension sizes
 	nlong = long.size
-
-	#t_original=t
-	#p_original=p
 
 	#interpolator expects grid coordinates in increasing order
 	#so we flip latitudes (first axis)
@@ -76,7 +74,7 @@ def findulam(t,p,lat,long,**kwargs):
 	t2 = numpy.flip(t2, axis=0)
 
 	#construct an interpolator
-	f = interpolate.RegularGridInterpolator((lat, long), t-t2)
+	f = interpolate.RegularGridInterpolator((lat, long), t-t2,bounds_error=False)
 
 	ft = interpolate.RegularGridInterpolator((lat, long), t)
 	ft2 = interpolate.RegularGridInterpolator((lat, long), t2)
@@ -93,30 +91,37 @@ def findulam(t,p,lat,long,**kwargs):
 
 	#construct an interpolator
 
-	fp = interpolate.RegularGridInterpolator((lat, long), p-p2)
+	fp = interpolate.RegularGridInterpolator((lat, long), p-p2,bounds_error=False)
 
 	#make a function for the square of the interpolator
 	def fsq(x):
 		return (fp(wraplatlong(x))**2)+100*(f(wraplatlong(x))**2)
-	
-	#print('initialguess, fsq(initialguess):'+str(initialguess)+','+ str(fsq(initialguess)))
-	
+		
 	# This tolerancecounter is kind of dumb; it asks for a few iterations below tolerance
-	# before returning False
+	# before returning False.  FIXME
 
 	tolerancecounter = 0
 	def callback_func(x, f, accepted):
 		nonlocal tolerancecounter
-		if (fsq(x)<kwargs['tolerance']):
+		if (fsq(x)<tolerance):
 			tolerancecounter=tolerancecounter+1
 		if (tolerancecounter==2):
 			return True
 		else:
 			return False
 	
-	#find a zero of f with initialguess
-	xinit = numpy.array(initialguess)
-	ret = optimize.basinhopping(fsq, xinit,T=1,niter=1000,callback=callback_func,disp=kwargs['basinhoppingdisplay'])
+	#Try basinhopping to get a zero with an initial guess
+	xinit = numpy.array(initialguess)	
+	ret = optimize.basinhopping(fsq, xinit,T=2,niter=100,callback=callback_func,disp=kwargs['basinhoppingdisplay'])
+
+	
+	
+
+	if (ret.fun>tolerance):
+		logger.info('Basinhopping failed.  Runnning differential_evolution instead')
+		logger.info(ret)
+		bounds = [(-90.0,90.0),(-180.0,180.0)]	
+		ret = optimize.differential_evolution(fsq, bounds)
 		
 	output = {'OptimizeResult_basinhopping': ret,
 			  'fun' : ret.fun,
@@ -232,7 +237,10 @@ def compute_ulampoints_between_timesteps(ds,**kwargs):
 #open the datasource
 # ds = xr.open_dataset('data.grib2',engine='cfgrib')
 # N=12
-# initialguess=[31.3302394,-8.55055563]
-# timestep_start = numpy.timedelta64(0,'h')
-# timestep_end = numpy.timedelta64(3,'h')
-# 	
+# ds0=ds.sel(step='12:00:00')
+# t=ds0['t2m'].data 
+# p=ds0['t2m'].data
+# lat = ds0['latitude']
+# long = ds0['longitude']
+# ulam = findulam(t,p,lat,long)
+
