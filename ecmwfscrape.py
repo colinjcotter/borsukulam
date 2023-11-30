@@ -9,6 +9,12 @@
 # (b) The temperature and pressure data at step firststep and at step laststep
 # 5. Copy this javascript file to my Amazon S3 bucket
 #
+#
+# Todo
+# Option for scraping
+# Option for data.grib file location
+# Automatic rotation of filename
+
 
 import logging 
 
@@ -24,9 +30,9 @@ import subprocess
 import time
 import sys
 
-
-
-
+# The following should be adapted for the local filesystem structure
+#bu_local_directory = '/home/ubuntu/borsuk-ulam/website/'
+bu_local_directory = './'
 # Script tries to find ulampoints within this tolerance
 tolerance = 1e-10
 
@@ -45,19 +51,15 @@ parser.add_argument('--date', dest='date', type=int, help='date')
 parser.add_argument('--time', dest='time', type=int, help='time')
 args = parser.parse_args()
 
-# The following should be adapted for the local filesystem structure
-ulamlistsfolder = 'ulamlists/' 
-latest_ulamlist_filename = ulamlistsfolder + 'latest_ulamlist.pickle'
-latest_bu_filename = 'website/bu.js'
 
+
+# Initialize Data
 firststep = args.firststep
 laststep = args.laststep
-
 steps=[numpy.timedelta64(firststep,'h'), numpy.timedelta64(laststep,'h')]
 
 ###
 ### Note: To actually have the script do the scraping the following block must be uncommented
-###
 ###
 
 logger.info("ECMWFscrape starting...")
@@ -75,7 +77,9 @@ result  = client.retrieve(
 )
 
 logger.info("Opening data from ECMWF")
+
 #Todo: Ideally we log the output of this command
+
 ds = xr.open_dataset('data.grib2',engine='cfgrib')
 
 #
@@ -92,12 +96,19 @@ logger.info('Finding ulampoints completed in '+str(time.time()-start)+'s')
 # All we record here is the ulamstep (rounded to second) and the ulampoint
 # Also we throw away those ulampoints not within a tolerances of 1e-8
 
-ulamlist_cropped = [[numpy.timedelta64(ulam['ulamstep'], 's').astype(float),ulam['ulampoint']] for ulam in ulamlist if ulam['OptimizeResult_basinhopping'].fun<tolerance]
+ulamlist_cropped = [[numpy.timedelta64(ulam['ulamstep'], 's').astype(float),ulam['ulampoint']] for ulam in ulamlist if ulam['OptimizeResult'].fun<tolerance]
 
 logger.info('ulamlist length: '+ str(len(ulamlist))+ ' of which '+ str(len(ulamlist_cropped))+ ' were found within tolerance')
 
-## Todo: Only write the bu file if there is at least one ulam point found within the first hour of the ds.date (we expect this should always happen
-## so it is a safeguard as we are updating the bu.js file An hour after UTC.  This will prevent a bu.js file that only has ulam points in the future
+#
+# Define the filename
+#
+
+bu_filename = 'bu-'+numpy.datetime_as_string(ds.time.data,'D')+'-'+str(firststep)+'-'+str(laststep)+'.js'
+bu_local_filename = bu_local_directory+bu_filename
+
+## Todo:Really we should check that there is at least one ulampoint found (say within the first hour)
+## else the website will fallback to much older data
 
 ds0=ds.sel(step=steps[0])
 ds1=ds.sel(step=steps[1])
@@ -112,12 +123,22 @@ bu = {
 't_final': numpy.array(ds1['t2m'].data).tolist(),
 'p_final': numpy.array(ds1['msl'].data).tolist()
 }
-f = open(latest_bu_filename , 'w' )
+f = open(bu_local_filename , 'w' )
 logging.info('Writing bu.js file')
 f.write('var bu=' + json.dumps(bu)+'\n')
 f.close
 
-logger.info('Moving bu.js file to S3 bucket')
-#Todo: Ideally we log the output of this command
-subprocess=subprocess.run(["aws s3 cp "+latest_bu_filename+" s3://ponderonward-website/Borsuk-Ulam/bu.js"], shell=True)
+
+#Todo: Ideally we log the output of these command
+#Todo: Move these parts to another script
+s3filedirectory = " s3://ponderonward-website/Borsuk-Ulam/"
+s3file = s3filedirectory + bu_filename
+logger.info('Writing bu-latest.js')
+with open(bu_local_directory+'bu-latest.js', 'w') as file:
+	file.write('<script src="'+s3file+'"</script>')
+logger.info('Moving '+str(bu_local_filename)+' file to S3 bucket')
+subprocess=subprocess.run(["aws s3 cp "+bu_local_filename+' '+s3file], shell=True)
 logger.info(subprocess)
+logger.info('Moving bu-latest.js to S3 bucket')
+subprocess2=subprocess.run(["aws s3 cp "+bu_local_directory+'bu-latest.js '+s3filedirectory+'bu-latest.js'], shell=True)
+logger.info(subprocess2)
