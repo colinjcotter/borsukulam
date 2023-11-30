@@ -28,7 +28,7 @@ import sys
 
 
 # Script tries to find ulampoints within this tolerance
-tolerance = 1e-12
+tolerance = 1e-10
 
 logger = logging.getLogger(__name__)
 
