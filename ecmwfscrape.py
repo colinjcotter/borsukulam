@@ -138,8 +138,8 @@ logger.info('Writing bu_datafile '+str(bu_datafile)+' to S3 bucket '+str(s3websi
 subprocessoutput=subprocess.run(["aws s3 cp "+bu_datafile+' '+s3websitedirectory], shell=True)
 logger.info(subprocessoutput)
 
-s3bufilesdirectory = "s3://ponderonward-website/Borsuk-Ulam/"
-logger.info('Wriing bu_local_filename '+str(bu_local_filename)+' to S3 bucket '+str(s3bufilesdirectory))
+s3bufilesdirectory = "s3://bursk-ulam-bufiles/"
+logger.info('Writing bu_local_filename '+str(bu_local_filename)+' to S3 bucket '+str(s3bufilesdirectory))
 
 subprocessoutput=subprocess.run(["aws s3 cp "+bu_local_filename+' '+s3bufilesdirectory], shell=True)
 logger.info(subprocessoutput)
