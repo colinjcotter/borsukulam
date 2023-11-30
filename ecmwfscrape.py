@@ -138,7 +138,7 @@ with open(bu_datafile, 'w') as file:
 if (args.s3dryrun==0):
 	s3websitedirectory = "s3://ponderonward-website/Borsuk-Ulam/"
 	logger.info('Writing bu_datafile '+str(bu_datafile)+' to S3 bucket '+str(s3websitedirectory))
-	subprocessoutput=subprocess.run(["aws s3 cp "+bu_datafile+' '+s3websitedirectory+'bu-latest-data.js'], shell=True)
+	subprocessoutput=subprocess.run(["aws s3 cp "+bu_datafile+'.gz '+s3websitedirectory+'bu-latest-data.js'], shell=True)
 	logger.info(subprocessoutput)
 
 	s3bufilesdirectory = "s3://bursk-ulam-bufiles/"
