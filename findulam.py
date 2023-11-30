@@ -30,25 +30,27 @@ def findulam(t,p,lat,long,**kwargs):
 	
 
 
-	""" Numerically Computes an ulam point from temperature and pressure data
+	""" Numerically Computes an ulam point from temperature and pressure data.  
+	If an initialguess is given then start with the scipy.optimize.basinhopping method starting at this initialguess
+	If either initialguess is not given, or the basinhopping does not give an answer within tolerance
+	then use the scipy.optimize.differential_evolution method
 	
 	Arguments
 	t - temperature as 2 dimensional array
 	p - pressure as 2 dimensional array
 	lat - latitude as 2 dimensional array
 	long - longidude as 2 dimensional array
-	initialguess (optional) - initial point as [lat,long] for the numerical method (default [-32,10])
-	tolerance (optional) - the tolerance after which to stop the basinhopping method (default 1e-11)
-	basinhoppingdisplay (optional) - if true then print steps in the basinhopping method
+	initialguess (optional) - initial point as [lat,long] for the numerical method
+	tolerance (optional) - the tolerance after which to stop the basinhopping method (default 1e-13)
 	
 	Returns array consisting of
 	'ulampoint' - [lat,lng] of the ulampoint found
-	'fun' - (difference of temperature)^2 + difference of pressure)^2 at the ulampoint and its antipodal
-	'OptimizeResult_basinhopping' - OptimizeResult of the basinhopping method
+	'fun' - 100*(difference of temperature)^2 + (difference of pressure)^2 at the ulampoint and its antipodal
+	'OptimizeResult' - OptimizeResult of the final method used
 	"""
 	
 	# Set default arguments
-	defaultKwargs = { 'tolerance': 1e-13, 'basinhoppingdisplay': False}
+	defaultKwargs = { 'tolerance': 1e-13}
 	kwargs = { **defaultKwargs, **kwargs }
 	
 	tolerance = kwargs['tolerance']
@@ -114,7 +116,7 @@ def findulam(t,p,lat,long,**kwargs):
 	
 	if 'initialguess' in kwargs:
 		xinit = numpy.array(kwargs['initialguess'])	
-		ret = optimize.basinhopping(fsq, xinit,T=2,niter=100,callback=callback_func,disp=kwargs['basinhoppingdisplay'])
+		ret = optimize.basinhopping(fsq, xinit,T=2,niter=100,callback=callback_func)
 		if (ret.fun<tolerance):
 			skip_optimizing_with_differential_evolution = True
 		else:
@@ -126,27 +128,12 @@ def findulam(t,p,lat,long,**kwargs):
 		bounds = [(-90.0,90.0),(-180.0,180.0)]	
 		ret = optimize.differential_evolution(fsq, bounds)
 		
-	output = {'OptimizeResult_basinhopping': ret,
+	output = {'OptimizeResult': ret,
 			  'fun' : ret.fun,
 			  'ulampoint' : [ret.x[0],ret.x[1]]
 	}
 
 	return(output)
-
-# The following gets Ulam point within a ds file
-# If the ds contains a single step then it returns the ulam data of that step
-# If the ds contains two or more steps then it returns N ulam data between each timestep
-# def process_ds_all_steps(N,initialguess,ds):
-# 	if (ds.step.data.size==0):
-# 		t = ds['t2m'].data	
-# 		p =ds['msl'].data
-# 		ulam = findulam(t,p,ds0['latitude'],ds0['longitude'],initialguess)
-# 		print('i,j,ulamtime',ulamtime,'ulampoint: ',ulam['ret'].x,'fun: ',ulam['ret'].fun,'nit: ',ulam['ret'].nit)
-# 	else:
-# 		for j in range(ds.step.data.size-1):
-# 			for i in range(N):
-# 				ulam = compute_ulampoint(ds,j,j+1,i,N,initialguess)
-# 				initialguess = [ulam['ret'].x[0],ulam['ret'].x[1]]
 
 
 def compute_ulampoint_between_timesteps(ds,timestep_start,timestep_end,i,N,**kwargs):
@@ -159,6 +146,7 @@ def compute_ulampoint_between_timesteps(ds,timestep_start,timestep_end,i,N,**kwa
 	i,N - Return ulampoint from temperature and pressure data linearly interpolated at time (1-i/N)*timestep_start + (i/N)*timestep_end
 		(requires i between 0 and N)
 	initialguess (optional) - initial point as [lat,long] for the numerical method
+	tolerance (optional) - tolerance of the numerical method (default 1e-13)
 	
 	Returns array consisting of
 	'ulampoint' - [lat,lng] of the ulampoint found
@@ -202,9 +190,6 @@ def compute_ulampoint_between_timesteps(ds,timestep_start,timestep_end,i,N,**kwa
 	
 	return(output)
 
-#
-# Todo: find a way to optionally pass the initialguess parameter
-#
 
 def compute_ulampoints_between_timesteps(ds,**kwargs):
 	""" Returns an array of ulamdata objects.  
@@ -214,10 +199,8 @@ def compute_ulampoints_between_timesteps(ds,**kwargs):
 	ds - ECMWF data source file
 	steps (optional) - an array of timesteps valid within ds that will be used. (default to all timesteps available)
 	N (optional) - Divide the interval between consecutive timesteps into N equally spaced timesteps, and compute the ulampoints at these times assuming linear interpolation of the data.  This is only used if the length of timesteps is at least 2.  Note that if N is larger than 2 then the ulam point for the final step will not be included (default N=1)
-	
-	
-	
-	initialguess (optional) - initial point as [lat,long] for the first run of the numerical method.  After that the result from the previous iteration is used as the initialguess.  Default [-32,10]
+	tolerance (optional) - tolerance of the numerical method (default 1e-13)
+	initialguess (optional) - initial point as [lat,long] for the first run of the numerical method.  After that the result from the previous iteration is used as the initialguess.  
 	
 	"""
 
