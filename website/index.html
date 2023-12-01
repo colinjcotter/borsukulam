@@ -16,10 +16,28 @@
 
 
 <body>
+
+
+
+
   <div id="container">
+
+
+
     <div class="lds-spinner" id="spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
 
-    <div id="map"></div>
+    <div id="map">
+
+<!-- hidden hitcounter -->
+<div class ="hidden">
+<a href="https://www.easycounter.com/">
+<img src="https://www.easycounter.com/counter.php?juliusross"
+border="0" alt="HTML Hit Counters"></a>
+<br><a href="https://www.easycounter.com/">Hit counter</a>
+</div>
+
+
+    </div>
     <div id="blurb" class="hidescrolling">
     
 <!--  Input:<input type="text" id="myText" value="Tue Nov 28 2023 07:10:00Z"> 
@@ -43,9 +61,8 @@
      <p class = "heading">Where can I find out more?</p>
    <p> There are plenty of places to find out more on the Borsuk-Ulam  Theorem, for instance <a href="https://en.wikipedia.org/wiki/Borsuk%E2%80%93Ulam_theorem" target=”_blank”>Wikipedia</a> or this <a href="https://www.youtube.com/watch?v=z75B8iP1Y3g" target=”_blank”>YouTube video</a>.   And if you want to know about the excitement of being a mathematician we recommend Stanisław Ulam's Book "<a href="https://www.goodreads.com/en/book/show/423246" target=”_blank”>Adventures of a Mathematician</a>".
    <p class = "heading"> Where does the temperature and air pressure data come from?</p>
-   <p> We use the <a href="https://www.ecmwf.int/">ECMWF</a> reanalysis data, which is a blend of meteorological measurements and a forecast model to produce a best guess of what the state of the atmosphere is at a given time.   We then apply a simple interpolation to extend this data in a continuous way to give a precise estimate of the temperature and air pressure everywhere on the map.
-   
-    <p class = "heading"> How recent are the temperature and pressure data?</p>
+   <p>We use the most recent publically available <a href="https://www.ecmwf.int/">ECMWF</a> forecast for the present time.   We then apply a simple interpolation to extend this data in a continuous way to give a precise estimate of the temperature and air pressure everywhere on the map.  This page is not intended to provide weather forecasts and is for education purposes only.
+       <p class = "heading"> How recent are the temperature and pressure data?</p>
  <p>The temperature and pressure numbers are the best guess estimates on <span id="lastupdated">Error finding date</span>.  The maps update themselves automatically (usually every minute), at which point you may see the markers move since the temperature and pressure will have changed.
    <p class = "heading"> Who made this? </p>
    <p> <a href="https://www.imperial.ac.uk/people/colin.cotter" target="_blank">Colin Cotter</a> (Imperial College, London) and <a href="https://sites.google.com/uic.edu/juliusross/home" target="_blank">Julius Ross</a> (University of Illinois at Chicago, supported by NSF-DMS 1749447).  You can provide feedback, or access the source code <a href="more.html">here</a>.
@@ -120,7 +137,7 @@ function refreshupdatedtime()
 	//
 	  const options = {
 	  dateStyle: 'full',
-	  timeStyle: 'long',
+	  timeStyle: 'long'
 	};
 	// Take the ds_datetime and add to it the current timestep (in seconds)
 	lastupdateddate = new Date(bu.ds_datetime+'Z')
@@ -159,22 +176,21 @@ function getclimatevariables(p)
 	lng = p.lng
 
 
-	//  Move the lat/long to beween [0,180) and [0,360)
-	// ****** I really do not understand this +90 that we do here; I wonder if the translation 
-	// from the python script is not working as expected
+
+	//
+	// Adjust the lat and long to reflect the lat/lng grid structure
+	//
 	var x = (lat+90)%180    
-	var y =(lng)%360	
+	var y =(lng+180)%360	
 	if (y<0){ y=y+360}
 	if (x<0){x=x+180}
 
 
 	// get the ll grid coordinate (i,j) wrapping correctly
 	var i = Math.floor(y/0.4)
-	//y=y+450
 	if (i==900){ i=0 } 
 
 	var j = Math.floor(x/0.4)
-	//j=j+225
 	if (j==450){ j=0}  
 
 	// get the ur grid coordinate (ip,jp) wrapping correctly
@@ -532,6 +548,15 @@ function mapBoxInit()
 		popup2.setLngLat(popup2_location)
 		updatepopuptexts()	
 		});
+		
+		map.on('touchstart', (e) => {
+		popup_location=e.lngLat; 		  	
+		popup2_location=get_antipodal(e.lngLat);
+		popup.setLngLat(popup_location)
+		popup2.setLngLat(popup2_location)
+		updatepopuptexts()	
+		});
+
 
 	map2.on('mousemove', (e) => {	
 		popup2_location=e.lngLat; 		  	
@@ -541,6 +566,14 @@ function mapBoxInit()
 		updatepopuptexts()	
 		});
 
+
+	map2.on('touchstart', (e) => {	
+		popup2_location=e.lngLat; 		  	
+		popup_location=get_antipodal(popup2_location);
+		popup.setLngLat(popup_location)
+		popup2.setLngLat(popup2_location)
+		updatepopuptexts()	
+		});
 
 }
     
