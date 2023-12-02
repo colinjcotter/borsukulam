@@ -1,7 +1,7 @@
 <html lang="en">
 
 <head>
-<title>Borsuk–Ulam</title>
+<title>The Borsuk–Ulam Explorer</title>
 <meta charset="UTF-8">
 <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
 <link href="https://api.mapbox.com/mapbox-gl-js/v2.11.0/mapbox-gl.css" rel="stylesheet">
@@ -26,8 +26,6 @@
 
     <div class="lds-spinner" id="spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
 
-    <div id="map">
-
 <!-- hidden hitcounter -->
 <div class ="hidden">
 <a href="https://www.easycounter.com/">
@@ -36,22 +34,30 @@ border="0" alt="HTML Hit Counters"></a>
 <br><a href="https://www.easycounter.com/">Hit counter</a>
 </div>
 
+    <div id="map">
+
+
+
 
     </div>
-    <div id="blurb" class="hidescrolling">
+    <div id="blurb">
     
-<!--  Input:<input type="text" id="myText" value="Tue Nov 28 2023 07:10:00Z"> 
-    <button type="button" onclick="manuallyupdatetime()">Move Time!</button> -->
+<div class ="debug" id="debugdiv"> Input:<input type="text" id="myText" value="Tue Nov 28 2023 07:10:00Z"> 
+    <button type="button" onclick="manuallyupdatetime()">Move Time!</button> 
+    </div>
 
 </form>
 
-
+<h1>The Borsuk-Ulam Explorer<br><span class="authors">by Colin Cotter and Julius Ross</span></h1>
      <p class = "heading">What is this?</p>
       <p>The two maps on the left display opposite sides of the earth, and the bubbles show the temperature and air pressure at locations that are directly opposite each other.
 <p> Although you might not expect it, there are always two locations directly opposite each other with <i>exactly</i> the same temperature and pressure!
 <p>An example of two of these locations is shown on the map with blue and brown markers.  Click, drag and zoom the map to see for yourself...
  <p class = "heading">What do the numbers in the bubbles mean?</p>
 <p> The temperature is the air temperature at 2 meters above the surface and is measured in degrees centigrade (C).  The pressure is the mean sea level pressure and is measured in kilo Pascals (kPa).  The latitude and longitude give the position of the location, measured in degrees.
+       <p class = "heading"> How recent are the temperature and pressure data?</p>
+ <p>The temperature and pressure numbers are the best guess estimates on <span id="lastupdated">Error finding date</span>.  The maps update themselves automatically (usually every minute), at which point you may see the markers move since the temperature and pressure will have changed.
+
  <p class = "heading">Who discovered this?</p>
   <p> The mathematics that underlies this fact is attributed to Karol Borsuk and Stanisław Ulam, and is now called the Borsuk-Ulam Theorem which is part of the field of Algebraic Topology.
    <p class = "heading">Does this only work for temperature and air pressure?</p>
@@ -62,8 +68,6 @@ border="0" alt="HTML Hit Counters"></a>
    <p> There are plenty of places to find out more on the Borsuk-Ulam  Theorem, for instance <a href="https://en.wikipedia.org/wiki/Borsuk%E2%80%93Ulam_theorem" target=”_blank”>Wikipedia</a> or this <a href="https://www.youtube.com/watch?v=z75B8iP1Y3g" target=”_blank”>YouTube video</a>.   And if you want to know about the excitement of being a mathematician we recommend Stanisław Ulam's Book "<a href="https://www.goodreads.com/en/book/show/423246" target=”_blank”>Adventures of a Mathematician</a>".
    <p class = "heading"> Where does the temperature and air pressure data come from?</p>
    <p>We use the most recent publically available <a href="https://www.ecmwf.int/">ECMWF</a> forecast for the present time.   We then apply a simple interpolation to extend this data in a continuous way to give a precise estimate of the temperature and air pressure everywhere on the map.  This page is not intended to provide weather forecasts and is for education purposes only.
-       <p class = "heading"> How recent are the temperature and pressure data?</p>
- <p>The temperature and pressure numbers are the best guess estimates on <span id="lastupdated">Error finding date</span>.  The maps update themselves automatically (usually every minute), at which point you may see the markers move since the temperature and pressure will have changed.
    <p class = "heading"> Who made this? </p>
    <p> <a href="https://www.imperial.ac.uk/people/colin.cotter" target="_blank">Colin Cotter</a> (Imperial College, London) and <a href="https://sites.google.com/uic.edu/juliusross/home" target="_blank">Julius Ross</a> (University of Illinois at Chicago, supported by NSF-DMS 1749447).  You can provide feedback, or access the source code <a href="more.html">here</a>.
     </div>
@@ -82,16 +86,25 @@ border="0" alt="HTML Hit Counters"></a>
 // Test scripts running every 6 hours
 // Move scripts to aws
 
+var spinnerdiv = document.getElementById('spinner');  // Used for the spinner that appears when updating the time at which data is being shown
+
 
 //
 // Initialization of various data
 // I am a little concerned about what happens if the bu file is slow to load
 
+if (debugmode == 1){
+var debugdiv = document.getElementById('debugdiv');  // Used for the spinner that appears when updating the time at which data is being shown
+debugdiv.style.display = 'block';
+}
+
+var spinnerdiv = document.getElementById('spinner');  // Used for the spinner that appears when updating the time at which data is being shown
+spinnerdiv.style.display = 'inline-block';
+
+
 let scriptEle = document.createElement("script");
 scriptEle.setAttribute("src", budirectory+bulatestdatafilename);
-
 document.body.appendChild(scriptEle);
-
 
 // Mapbox variables
 var map,map2 
@@ -99,6 +112,8 @@ marker1 = new mapboxgl.Marker({color: "#9a9065"})
 marker2 = new mapboxgl.Marker()
 marker3 = new mapboxgl.Marker({color: "#9a9065"})
 marker4 = new mapboxgl.Marker()
+
+
 const popup = new mapboxgl.Popup({
 	closeButton: false,
 	closeOnClick: false
@@ -112,7 +127,6 @@ const popup2 = new mapboxgl.Popup({
 // Other global variables
 var temporarystep, temporaryi	// These need to be renamed.  Could we even remove them?
 var automaticupdates = true	// Set to true in normal circumstances so data will update every minute.  
-var spinnerdiv = document.getElementById('spinner');  // Used for the spinner that appears when updating the time at which data is being shown
 var  popup_location, popup2_location  // global variables that store the location of the two popups.  I guess with better programming these could be removed
 
 window.onload = function () { mapBoxInit(); }
@@ -180,7 +194,7 @@ function getclimatevariables(p)
 	//
 	// Adjust the lat and long to reflect the lat/lng grid structure
 	//
-	var x = (lat+90)%180    
+	var x = (-lat+90)%180    
 	var y =(lng+180)%360	
 	if (y<0){ y=y+360}
 	if (x<0){x=x+180}
@@ -271,9 +285,9 @@ function manuallyupdatetime()
 	// Used for testing purposes only
 	//
 	console.log('updating timestep manually')
-	now = document.getElementById('myText').value
-	now = Date.parse(now)
-	newindex = calculatetimestep(now)
+	manualdate = document.getElementById('myText').value
+	manualdate = Date.parse(manualdate)
+	newindex = calculatetimestep(manualdate)
 	if (newindex!=temporaryi)
 	{
 	console.log('found new timestep when updating manually')
@@ -289,18 +303,29 @@ function updatetime()
 	//
 	// Function that is run periodically to use the most recent time data available
 	//
-	console.log('checking for updated timestep automatically')
-	now = new Date()
-	now = Date.parse(now)
-	newindex = calculatetimestep(now)
-	if (newindex!=temporaryi)
-	{
-	console.log('found new timestep when updating automatically')
-	temporaryi = newindex
-	temporarystep = bu.ulamlist[temporaryi][0]
-	updatetimestep()
+	if(automaticupdates==true){
+		now = new Date()
+		now = Date.parse(now)
+		newindex = calculatetimestep(now)
+		if (newindex!=temporaryi)
+		{
+		temporaryi = newindex
+		temporarystep = bu.ulamlist[temporaryi][0]
+		updatetimestep()
+	}
 	}
 	
+}
+
+function fallback(){
+	console.log('falling back to older data; this should not happen; is the system clock wrong?')
+	automaticupdates = false
+	
+	let scriptEle2 = document.createElement("script");
+	scriptEle2.setAttribute("src",fallbackbufile);
+	document.head.appendChild(scriptEle2);
+	newindex =0
+	console.log('newindex',newindex)
 }
 
 function calculatetimestep(now)
@@ -311,7 +336,6 @@ function calculatetimestep(now)
 	//
 	
 	ds_date = new Date(bu.ds_datetime+'Z')
-	console.log('ds_date',ds_date.toISOString())
 	difference = (now - ds_date)/1000 // measured in seconds
 	
 	filtered_ulamlist = ulamlist.filter((u)=>
@@ -319,24 +343,17 @@ function calculatetimestep(now)
 	return u[0]<=difference
 	}
 	)
-	console.log('ulamlist',ulamlist)
-	console.log('filtered_ulamlist',filtered_ulamlist)
-	console.log('number of timesteps up to now',filtered_ulamlist.length)
+
 
 	if (filtered_ulamlist.length==0)
 		{
 		// load fall back file and take the earliest time in that file.  This has not been tested
-		console.log('falling back to older data; this should not happen')
-		automaticupdates = false
-		var tag = document.createElement("script");
-		tag.src = "bu_fallback.js";
-		document.getElementsByTagName("head")[0].appendChild(tag);
-		newindex =0
+		console.log('cannot find any relevant times in the bufile; falling back')
+		fallback()
 		}
 	else
 		newindex = filtered_ulamlist.length-1
 			
-	console.log('newindex',newindex)
 	return newindex	
 }
 		
@@ -384,7 +401,6 @@ function updatetimestep()
 		 requestAnimationFrame(animateMarker)
 		 updatepopuptexts()
 		 
-		console.log('refreshingupdatetime')
 		refreshupdatedtime()
   		spinnerdiv.style.display = "none";
 		} 
@@ -480,6 +496,7 @@ function mapBoxInit()
 	 // Once map is loaded add the markers and the popup
 	 marker1.setLngLat(ulam1).addTo(map);	
 	 marker2.setLngLat(ulam2).addTo(map);
+	 spinnerdiv.style.display = 'none';
 	 popup.setLngLat([popup_location.lng,popup_location.lat]).addTo(map);
 	 updatepopuptexts()
 	 })
@@ -487,7 +504,8 @@ function mapBoxInit()
 	map2.on('load', () => {
 	// Once map2 is loaded add the markers and the popup
 	 marker3.setLngLat(ulam1).addTo(map2);	
-	 marker4.setLngLat(ulam2).addTo(map2);	     		
+	 marker4.setLngLat(ulam2).addTo(map2);	  
+	 spinnerdiv.style.display = 'none';   		
 	 popup2.setLngLat([popup2_location.lng,popup2_location.lat]).addTo(map2);
 	 updatepopuptexts()
 	})
