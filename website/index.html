@@ -40,15 +40,32 @@ border="0" alt="HTML Hit Counters"></a>
 
 
     </div>
+
+
+
+
+
     <div id="blurb">
-    
+
+    <section id="arrow" class="demo">
+<p><span></span></p>
+</section>
+
+
 <div class ="debug" id="debugdiv"> Input:<input type="text" id="myText" value="Tue Nov 28 2023 07:10:00Z"> 
     <button type="button" onclick="manuallyupdatetime()">Move Time!</button> 
     </div>
 
 </form>
 
+
+
+
 <h1>The Borsuk-Ulam Explorer<br><span class="authors">by Colin Cotter and Julius Ross</span></h1>
+
+
+
+
      <p class = "heading">What is this?</p>
       <p>The two maps on the left display opposite sides of the earth, and the bubbles show the temperature and air pressure at locations that are directly opposite each other.
 <p> Although you might not expect it, there are always two locations directly opposite each other with <i>exactly</i> the same temperature and pressure!
@@ -56,7 +73,7 @@ border="0" alt="HTML Hit Counters"></a>
  <p class = "heading">What do the numbers in the bubbles mean?</p>
 <p> The temperature is the air temperature at 2 meters above the surface and is measured in degrees centigrade (C).  The pressure is the mean sea level pressure and is measured in kilo Pascals (kPa).  The latitude and longitude give the position of the location, measured in degrees.
        <p class = "heading"> How recent are the temperature and pressure data?</p>
- <p>The temperature and pressure numbers are the best guess estimates on <span id="lastupdated">Error finding date</span>.  The maps update themselves automatically (usually every minute), at which point you may see the markers move since the temperature and pressure will have changed.
+ <p>The temperature and pressure numbers are the best guess estimates on <span id="lastupdated">(loading)</span>.  The maps update themselves automatically (usually every minute), at which point you may see the markers move since the temperature and pressure will have changed.
 
  <p class = "heading">Who discovered this?</p>
   <p> The mathematics that underlies this fact is attributed to Karol Borsuk and Stanisław Ulam, and is now called the Borsuk-Ulam Theorem which is part of the field of Algebraic Topology.
@@ -105,6 +122,19 @@ spinnerdiv.style.display = 'inline-block';
 let scriptEle = document.createElement("script");
 scriptEle.setAttribute("src", budirectory+bulatestdatafilename);
 document.body.appendChild(scriptEle);
+
+//
+// Hide arrow when user has finished scrolling
+//
+const scrollableDiv = document.getElementById("blurb");
+var arrow = document.getElementById('arrow');
+scrollableDiv.addEventListener('scroll', function() {
+if ((scrollableDiv.scrollTop+scrollableDiv.offsetHeight)>scrollableDiv.scrollHeight-10)
+	{
+	arrow.style.display = 'none';
+	}
+}
+)
 
 // Mapbox variables
 var map,map2 
