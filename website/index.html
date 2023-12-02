@@ -45,7 +45,7 @@ border="0" alt="HTML Hit Counters"></a>
 
 
 
-    <div id="blurb">
+    <div id="blurb" class="blurb">
 
     <section id="arrow" class="demo">
 <p><span></span></p>
@@ -76,7 +76,7 @@ border="0" alt="HTML Hit Counters"></a>
  <p>The temperature and pressure numbers are the best guess estimates on <span id="lastupdated">(loading)</span>.  The maps update themselves automatically (usually every minute), at which point you may see the markers move since the temperature and pressure will have changed.
 
  <p class = "heading">Who discovered this?</p>
-  <p> The mathematics that underlies this fact is attributed to Karol Borsuk and Stanisław Ulam, and is now called the Borsuk-Ulam Theorem which is part of the field of Algebraic Topology.
+  <p> The mathematics that underlies this fact was discovered in the 1930s, and is attributed to Karol Borsuk and Stanisław Ulam.  It is now called the Borsuk-Ulam Theorem which is part of the field of Algebraic Topology.
    <p class = "heading">Does this only work for temperature and air pressure?</p>
   <p> Not at all! It also works for any other pairs of measurements, for example you could use temperature and humidity instead.    What is needed is that the measurements are "continuous" which means that if you move on the surface of the earth just a little bit then the measurement also changes by just a little bit.
      <p class = "heading">Can you do this for three or more measurements?</p>
@@ -128,10 +128,12 @@ document.body.appendChild(scriptEle);
 //
 const scrollableDiv = document.getElementById("blurb");
 var arrow = document.getElementById('arrow');
+var blurb = document.getElementById('blurb');
 scrollableDiv.addEventListener('scroll', function() {
 if ((scrollableDiv.scrollTop+scrollableDiv.offsetHeight)>scrollableDiv.scrollHeight-10)
 	{
-	arrow.style.display = 'none';
+	console.log('got here')
+	arrow.style.display = 'none'
 	}
 }
 )
