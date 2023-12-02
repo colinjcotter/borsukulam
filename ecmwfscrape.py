@@ -1,4 +1,7 @@
 #
+# Script to scrape ECMWF data, calculate ulam points, and create some javascript files
+# to be used in Borsuk-Ulam explorer website
+#
 # Typical Usage: 
 # python3 ecmwfscrape.py --firststep 0 --laststep 12 --date 0 --time 6 --N 720
 #
@@ -34,6 +37,9 @@ tolerance = 1e-10
 #	logger.exception("Uncaught exception: {0}",format(str(value)))
 #sys.excepthook = my_handler
 
+#
+# Parse User Inputs
+#
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--firststep', dest='firststep', type=int, help='Firststep',default=0)
@@ -48,24 +54,27 @@ parser.add_argument('--logfile',dest='logfile',type=str, default = 'ecmwfscrape.
 #parser.add_argument('--verbose',dest='verbose',type=int, default=0,help='if non zero then verbose logging about the numerical method')
 args = parser.parse_args()
 
+#
+# Setup logger
+#
 logging.basicConfig(filename = args.logfile,format='%(asctime)s %(levelname)s  %(message)s',datefmt='%Y-%m-%d %H:%M:%S')
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-bu_local_directory  = args.bu_local_directory
 
 # Initialize Data
+bu_local_directory  = args.bu_local_directory
 firststep = args.firststep
 laststep = args.laststep
 steps=[numpy.timedelta64(firststep,'h'), numpy.timedelta64(laststep,'h')]
 
-###
-### Note: To actually have the script do the scraping the following block must be uncommented
-###
+
+#
+# Get data from ECMWF
+#
 
 logger.info("ECMWFscrape starting...")
-
 
 if (args.scrapedryrun==0):
 	logger.info('Retrieving data from ECMWF')
@@ -80,13 +89,15 @@ if (args.scrapedryrun==0):
 	)
 
 logger.info("Opening data from ECMWF")
+
 #Todo: Ideally we log the output of this command
 
 ds = xr.open_dataset('data.grib2',engine='cfgrib')
 
 #
-# This is where the computation is made
+# Find the ulam points
 #
+
 logger.info('Finding ulampoints')
 N=args.N
 start = time.time()
@@ -95,17 +106,12 @@ logger.info('Finding ulampoints completed in '+str(time.time()-start)+'s')
 
 
 
-# Write the javascript file that contains the required data
+# Create a javascript file that contains the required data
 # All we record here is the ulamstep (rounded to second) and the ulampoint
 # Also we throw away those ulampoints not within a tolerances of 1e-8
 
 ulamlist_cropped = [[numpy.timedelta64(ulam['ulamstep'], 's').astype(float),ulam['ulampoint']] for ulam in ulamlist if ulam['OptimizeResult'].fun<tolerance]
-
 logger.info('ulamlist length: '+ str(len(ulamlist))+ ' of which '+ str(len(ulamlist_cropped))+ ' were found within tolerance')
-
-#
-# Write the two filenames
-#
 
 bu_filename = 'bu-'+numpy.datetime_as_string(ds.time.data,'D')+'T'+ str(args.time)+'h:'+str(firststep)+':'+str(laststep)+'.js'
 bu_local_filename = bu_local_directory+bu_filename
@@ -128,14 +134,19 @@ logging.info('Writing bu.js file')
 f.write('var bu=' + json.dumps(bu)+'\n')
 f.close
 
+#
+# Create a smaller javascript file that points to the above data file 
+#
+
 bu_datafile = bu_local_directory+'bu-latest-data.js'
 with open(bu_datafile, 'w') as file:
-	file.write('const bulatestdatafilename="'+bu_filename+'.gz"')
+	file.write('var bulatestdatafilename="'+bu_filename+'.gz"')
 
 #
 # Move the files to the S3 buckets
 #
 if (args.s3dryrun==0):
+	# Copy the smaller javascript file to S3 bucket
 	s3websitedirectory = "s3://julius-ross.com/Borsuk-Ulam/"
 	logger.info('Writing bu_datafile '+str(bu_datafile)+' to S3 bucket '+str(s3websitedirectory))
 	subprocessoutput=subprocess.run(["aws s3 cp "+bu_datafile+' '+s3websitedirectory+'bu-latest-data.js'], shell=True)
@@ -143,10 +154,13 @@ if (args.s3dryrun==0):
 
 	s3bufilesdirectory = "s3://bursk-ulam-bufiles/"
 
+	# Compress the data file
+	# TodoL Move this out of the s3 bucket dryrun command
 	logger.info('Compressing '+str(bu_local_filename))
 	subprocessoutput=subprocess.run(['gzip -f '+bu_local_filename], shell=True)
 	logger.info(subprocessoutput)
 	
+	# Copy the gzipped javascript data file to S3 bucket
 	logger.info('Copying zipped bu file '+str(bu_local_filename)+' to S3 bucket '+str(s3bufilesdirectory))
 	subprocessoutput=subprocess.run(["aws s3 cp "+bu_local_filename+'.gz'+' '+s3bufilesdirectory+' --content-encoding gzip'], shell=True)
 	logger.info(subprocessoutput)
