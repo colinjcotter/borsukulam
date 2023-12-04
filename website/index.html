@@ -5,6 +5,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
 <link href="https://api.mapbox.com/mapbox-gl-js/v2.11.0/mapbox-gl.css" rel="stylesheet">
+<script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-language/v1.0.0/mapbox-gl-language.js'></script>
+
 <script src="config.js"></script>
 <script src="https://api.mapbox.com/mapbox-gl-js/v2.11.0/mapbox-gl.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js" charset="utf-8"></script>
@@ -67,11 +69,16 @@ border="0" alt="HTML Hit Counters"></a>
 
 
      <p class = "heading">What is this?</p>
-      <p>The two maps on the left display opposite sides of the earth, and the bubbles show the temperature and air pressure at locations that are directly opposite each other.
-<p> Although you might not expect it, there are always two locations directly opposite each other with <i>exactly</i> the same temperature and pressure!
-<p>An example of two of these locations is shown on the map with blue and brown markers.  Click, drag and zoom the map to see for yourself...
+      <p>The two maps on the left display opposite sides of the earth, and the green bubbles show the temperature and air pressure right now at locations directly opposite each other.
+      <p>You probably would not expect it, but there are pairs of locations directly opposite each other with exactly the same temperature.  Drag the map to move it, and see if you can find any for yourself (if you get stuck, try moving the bubble along the equator and see what happens.
+      
+      <p> It is also possible to find pairs of locations directly opposite each other with exactly the same air pressure.  See if you can find any yourself. 
+      
+           
+<p> An amazing mathematical fact, called the Borsuk-Ulam Theorem, says that at any moment in time there is always a pair of locations directly opposite each other with exactly the same temperature <i>and</i> exactly the same pressure!
+<p>An example of a pair of such locations is shown on the map with blue and brown markers.   Zoom in to the map to see this for yourself...
  <p class = "heading">What do the numbers in the bubbles mean?</p>
-<p> The temperature is the air temperature at 2 meters above the surface and is measured in degrees centigrade (C).  The pressure is the mean sea level pressure and is measured in kilo Pascals (kPa).  The latitude and longitude give the position of the location, measured in degrees.
+<p> The temperature is the air temperature at 2 meters above the surface and is measured in degrees centigrade (C).  The pressure is what is called the "mean sea level pressure" and is measured in kilo Pascals (kPa).  The latitude and longitude give the position of the location, measured in degrees.
        <p class = "heading"> How recent are the temperature and pressure data?</p>
  <p>The temperature and pressure numbers are the best guess estimates on <span id="lastupdated">(loading)</span>.  The maps update themselves automatically (usually every minute), at which point you may see the markers move since the temperature and pressure will have changed.
 
@@ -502,7 +509,11 @@ function mapBoxInit()
 	projection: 'globe',
 	hash: false
 	});
-
+	
+	const language = new MapboxLanguage();
+	map.addControl(language);
+	const language2 = new MapboxLanguage();
+	map2.addControl(language2);
 
    
 	// these two variables are being used to keep track of the popup locations
