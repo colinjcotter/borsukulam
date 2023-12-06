@@ -51,7 +51,7 @@ text-transform: uppercase;
   left: 0%;
   bottom: 0px;
   width: 50%;
-  border-right: solid;
+  border-right: none;
   border-width: 1pt;
   background-color:rgb(47,76,109);
 }
@@ -63,9 +63,8 @@ text-transform: uppercase;
   left: 50%;
   bottom: 0px;
   border-left: solid;
-  border-width: 1pt;
   width: 50%;    
-  border-style: none;
+  border-right: none;
   background-color:rgb(47,76,109);
 }
 
@@ -112,12 +111,10 @@ Z-index: 10;
 
 .verticalbar {
 position: absolute;
-right: 0px;
-background-color: red;
-   border-style: none;
-  border-color:black;
-  border-width: 1px;
-width:15px;
+right: -2;
+background-color: white;
+border-style: none;
+width: 15px;
 height: 100%;
 }
 
@@ -342,6 +339,29 @@ opacity: 0.8;
 #section05 p {
   padding-top: 70px;
 }
+
+.smallarrow {
+  position: absolute;
+  border: solid grey;
+  border-width: 0 3px 3px 0;
+  display: inline-block;
+  padding: 3px;
+  top: 50%;
+}
+
+.right {
+  transform: rotate(-45deg);
+  -webkit-transform: rotate(-45deg);
+}
+
+.left {
+  left: 4px;
+  transform: rotate(135deg);
+  -webkit-transform: rotate(135deg);
+}
+
+
+
 #arrow p span {
   position: fixed;
   top:90%;

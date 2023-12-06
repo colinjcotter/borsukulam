@@ -40,7 +40,7 @@ border="0" alt="HTML Hit Counters"></a>
 
 <div id="map"></div>
 <div id="map2"></div>
-<div id ="verticalbar" class="verticalbar"></div>
+<div id ="verticalbar" class="verticalbar"><div id="smallarrow" class="smallarrow right"></div></div>
 </div>
 
 
@@ -101,60 +101,65 @@ border="0" alt="HTML Hit Counters"></a>
 var expanded = false
 var map,map2 
 function handleexpand()
-{ var container = document.getElementById('container');
- // Add the class to trigger the animation
+// Handler for the expanding and collapsing of the explaination text
+{ 
+	var container = document.getElementById('container');
+	var smallarrow = document.getElementById('smallarrow');
+	 // Add the class to trigger the animation
  
- if (expanded==false) {
- 	console.log('expanding')
- 	container.classList.remove('expand-animation');
- 	container.classList.remove('collapse-animation');
- 	container.classList.add('expand-animation');
- 	expanded = true
- 	 container.addEventListener('animationend', function() {
-    // This function will be called when the animation is finished
-    console.log('Animation finished!');
-    // Call your custom function here if needed
-    
-    
-         map.resize()
-    map2.resize()
+	 if (expanded==false) {
+		container.classList.remove('expand-animation');
+		container.classList.remove('collapse-animation');
+		container.classList.add('expand-animation');
+		// Todo: run resize map when animation finishes just to be sure
+		
+		expanded = true
+		smallarrow.classList.remove('right');
+		smallarrow.classList.add('left');
 
-    
-  	});
- 	}
- else
- {	console.log('collapsing')
-	container.classList.remove('expand-animation');
-	container.classList.remove('collapse-animation');
- 	container.classList.add('collapse-animation');
- 	expanded = false
- 	
- 	container.addEventListener('animationend', function() {
-    // This function will be called when the animation is finished
-    console.log('Animation finished!');
-    // Call your custom function here if needed
-    
-    map.resize()
-    map2.resize()
-    
- 	
-  	});
- 	}
-  
+	 	// The following runs map.resize every 10ms for 6 seconds to smooth out the animation
+		counter =0
+
+		const intervalId = setInterval(() => {
+			map.resize()
+			map2.resize()
+			counter++;
+			if (counter >= 6000 / 100) {
+				clearInterval(intervalId); // Stop the interval after 3 seconds
+			  }
+			}, 10);
+	
+		}
+	 else
+	 {	
+		container.classList.remove('expand-animation');
+		container.classList.remove('collapse-animation');
+		container.classList.add('collapse-animation');
+		expanded = false
+		// Todo: run resize map when animation finishes just to be sure
+		
+		
+		smallarrow.classList.remove('left');
+		smallarrow.classList.add('right');
+	
+		counter =0
+		// The following runs map.resize every 10ms for 6 seconds to smooth out the animation
+		const intervalId = setInterval(() => {
+			  map.resize()
+			  map2.resize()
+			  counter++;
+			  // Check if 3 seconds have passed (3000 milliseconds)
+			  if (counter >= 6000 / 100) {
+				clearInterval(intervalId); // Stop the interval after 3 seconds
+			  }
+			}, 10);
+		}
 }
 
 
-// Add a click event listener to the div
+// Add a click event listener to expand and collapse the explaination text
 var verticalbar = document.getElementById('verticalbar');
 verticalbar.addEventListener('click', handleexpand);   
-
-// Todo
-// Check the weather data against real data (have we flipped it all around?)
-// Test on other devices
-// Round time to nearest minute
-// Test fallback
-// Test scripts running every 6 hours
-// Move scripts to aws
 
 var spinnerdiv = document.getElementById('spinner');  // Used for the spinner that appears when updating the time at which data is being shown
 
