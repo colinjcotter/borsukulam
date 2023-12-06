@@ -111,7 +111,14 @@ function handleexpand()
 		container.classList.remove('expand-animation');
 		container.classList.remove('collapse-animation');
 		container.classList.add('expand-animation');
-		// Todo: run resize map when animation finishes just to be sure
+		
+		//Resize maps on animation end
+		function onAnimationEnd() {
+			map.resize()
+			map2.resize()
+    	}
+    	container.addEventListener('animationend', onAnimationEnd);
+		
 		
 		expanded = true
 		smallarrow.classList.remove('right');
@@ -125,7 +132,7 @@ function handleexpand()
 			map2.resize()
 			counter++;
 			if (counter >= 6000 / 100) {
-				clearInterval(intervalId); // Stop the interval after 3 seconds
+				clearInterval(intervalId); 
 			  }
 			}, 10);
 	
@@ -136,7 +143,13 @@ function handleexpand()
 		container.classList.remove('collapse-animation');
 		container.classList.add('collapse-animation');
 		expanded = false
-		// Todo: run resize map when animation finishes just to be sure
+		//Resize maps on animation end
+		function onAnimationEnd() {
+			map.resize()
+			map2.resize()
+    	}
+    	container.addEventListener('animationend', onAnimationEnd);
+		
 		
 		
 		smallarrow.classList.remove('left');
@@ -148,9 +161,8 @@ function handleexpand()
 			  map.resize()
 			  map2.resize()
 			  counter++;
-			  // Check if 3 seconds have passed (3000 milliseconds)
 			  if (counter >= 6000 / 100) {
-				clearInterval(intervalId); // Stop the interval after 3 seconds
+				clearInterval(intervalId); // Stop the interval after 2 seconds
 			  }
 			}, 10);
 		}
@@ -233,7 +245,7 @@ const popup2 = new mapboxgl.Popup({
   });
 
 // Other global variables
-var temporarystep, temporaryi	// These need to be renamed.  Could we even remove them?
+var currenttimestep, currenttimestepindex	// These need to be renamed.  Could we even remove them?
 var automaticupdates = true	// Set to true in normal circumstances so data will update every minute.  
 var  popup_location, popup2_location  // global variables that store the location of the two popups.  I guess with better programming these could be removed
 
@@ -263,7 +275,7 @@ function refreshupdatedtime()
 	};
 	// Take the ds_datetime and add to it the current timestep (in seconds)
 	lastupdateddate = new Date(bu.ds_datetime+'Z')
-	lastupdateddate.setSeconds(lastupdateddate.getSeconds() + temporarystep)
+	lastupdateddate.setSeconds(lastupdateddate.getSeconds() + currenttimestep)
 	// Then round to the nearest minute
 	lastupdateddate=roundToNearestMinute(lastupdateddate)
 	// Now update the html
@@ -290,7 +302,7 @@ function getclimatevariables(p)
 	{	
 	// 
 	// Gets the temperature and pressure at a point p
-	// Assumes the correct temporarystep for the time
+	// Assumes the correct currenttimestep for the time
 	// Also returns a textlabel in html to use in the popup
 	// Note this is hardcoded for a grid size of 0.4
 	//
@@ -368,7 +380,7 @@ function getclimatevariables(p)
 
 	// interpolate the temperature and pressure at the right time between the initial and final times
 	var temp,pressure
-	var delta = (temporarystep-bu.initial_timestep)/(bu.final_timestep-bu.initial_timestep)
+	var delta = (currenttimestep-bu.initial_timestep)/(bu.final_timestep-bu.initial_timestep)
 	temp = delta * temp_final + (1- delta)* temp_initial
 	pressure = delta * pressure_final + (1- delta)* pressure_initial
 
@@ -396,11 +408,11 @@ function manuallyupdatetime()
 	manualdate = document.getElementById('myText').value
 	manualdate = Date.parse(manualdate)
 	newindex = calculatetimestep(manualdate)
-	if (newindex!=temporaryi)
+	if (newindex!=currenttimestepindex)
 	{
 	console.log('found new timestep when updating manually')
-	temporaryi = newindex
-	temporarystep = bu.ulamlist[temporaryi][0]
+	currenttimestepindex = newindex
+	currenttimestep = bu.ulamlist[currenttimestepindex][0]
 	updatetimestep()
 	}
 	
@@ -415,10 +427,10 @@ function updatetime()
 		now = new Date()
 		now = Date.parse(now)
 		newindex = calculatetimestep(now)
-		if (newindex!=temporaryi)
+		if (newindex!=currenttimestepindex)
 		{
-		temporaryi = newindex
-		temporarystep = bu.ulamlist[temporaryi][0]
+		currenttimestepindex = newindex
+		currenttimestep = bu.ulamlist[currenttimestepindex][0]
 		updatetimestep()
 	}
 	}
@@ -501,7 +513,7 @@ function updatetimestep()
  
 
 	
-		 ulam1  = new mapboxgl.LngLat(bu.ulamlist[temporaryi][1][1],bu.ulamlist[temporaryi][1][0])
+		 ulam1  = new mapboxgl.LngLat(bu.ulamlist[currenttimestepindex][1][1],bu.ulamlist[currenttimestepindex][1][0])
 		 ulam2  = get_antipodal(ulam1)
 		 startLngLatA = marker1.getLngLat()
 		 startLngLatB = marker2.getLngLat()
@@ -614,15 +626,15 @@ function mapBoxInit()
 	
 	// initialize the correct timestep to use from the data we have
 	ulamlist = bu.ulamlist
-	temporaryi = calculatetimestep(new Date())
-	temporarystep = bu.ulamlist[temporaryi][0]
+	currenttimestepindex = calculatetimestep(new Date())
+	currenttimestep = bu.ulamlist[currenttimestepindex][0]
 	refreshupdatedtime()
 
 	// set timer to run every minute to update the timestep as needed
 	setInterval(updatetime, 60*1000);
 
 	// calculate the ulam points for the first time
-	ulam1  = new mapboxgl.LngLat(bu.ulamlist[temporaryi][1][1],bu.ulamlist[temporaryi][1][0])
+	ulam1  = new mapboxgl.LngLat(bu.ulamlist[currenttimestepindex][1][1],bu.ulamlist[currenttimestepindex][1][0])
 	ulam2  = get_antipodal(ulam1)
 
 	 map.on('load', () => {
