@@ -1,11 +1,18 @@
 
+:root {
+  --light-green: rgb(249,210,128); /* Custom property for a primary color */
+  --dark-green: rgb(149,210,128); /* Custom property for an accent color */
+}
+
+
+
     body {
       margin: 0px;
       font-family: "DIN Pro Regular";
     }
 
 a {
-  color: black;
+  color: blue;
 }
 
 p {
@@ -38,41 +45,95 @@ text-transform: uppercase;
 
 
 
-    #map {
-      position: absolute;
-      top: 0px;
-      left: 0%;
-      bottom: 0px;
-      width: 40%;
-      border-style: solid;
-      border-color:black;
-      background-color:rgb(47,76,109);
-    }
+#map {
+  position: absolute;
+  top: 0px;
+  left: 0%;
+  bottom: 0px;
+  width: 50%;
+  border-right: solid;
+  border-width: 1pt;
+  background-color:rgb(47,76,109);
+}
+
+
+#map2 {
+  position: absolute;
+  top: 0px;
+  left: 50%;
+  bottom: 0px;
+  border-left: solid;
+  border-width: 1pt;
+  width: 50%;    
+  border-style: none;
+  background-color:rgb(47,76,109);
+}
+
+
+
+    
+.timer {
+position: absolute;
+text-align: center;
+bottom: 0pt;
+left: 5%;
+width: 90%;
+height: 15pt;
+Z-index: 3;
+font-size: 12pt;
+color: white;
+text-shadow: black 1px 0 10px;
+}
+
+.container {
+position: absolute;
+width: 70%;
+height: 100%;
+Z-index: 10;
+ border-style: none;
+}
     
 
-    #map2 {
-      position: absolute;
-      top: 0px;
-      left: 40%;
-      bottom: 0px;
-      width:40%;     
-       border-style: solid;
-      border-color:black;
-     background-color:rgb(47,76,109);
-    }
     
+    
+#map2 .mapbox-logo{ display: none !important; } 
+#map2 .mapboxgl-ctrl-logo { display: none !important; } 
+#mao2 .mapbox-improve-map { display: none; } 
+#map2 .mapboxgl-ctrl-compass { display: none; }
+
+.blurbcontainer{
+	  position: absolute;
+      left:70%;
+      width: 30%;
+      height: 100%;
+      Z-index: 0;
+      border-style: none;
+}
+
+.verticalbar {
+position: absolute;
+right: 0px;
+background-color: red;
+   border-style: none;
+  border-color:black;
+  border-width: 1px;
+width:15px;
+height: 100%;
+}
 
 .blurb {
-    background-color:white;
+position: relative;
+ border-style: none;
+left: 5px;
+width: 100%;
+      background-color:white;
       padding-top: 10px;
       padding-bottom: 20px;
       position: absolute;
-      left:80%;
-      width: 20%;
       height: 95%;
       overflow-y: scroll;
       Z-index:0;
-      background: linear-gradient(to bottom, rgba(255, 255, 255, 0), white);
+  /*    background: linear-gradient(to bottom, rgba(255, 255, 255, 0), white);
       -webkit-mask-image: linear-gradient(to bottom, black 95%, transparent 100%),
       	linear-gradient(to left, black 15px, transparent 6px);
       
@@ -90,17 +151,18 @@ text-transform: uppercase;
 }
 
 
-.mapboxgl-popup-content {
-  background-color: #a9d6af;
-  opacity: 0.9;
-  box-shadow: 0 0 15px 2px #ffffff;
-  pointer-events: none !important;
-  touch-action: none; !important;
-}
+
 
 .highlight{
-	box-shadow: 0 0 35px 15px #e1f249;
-	
+  box-shadow: 0px 0px 50px 25px yellow, -5px -5px 15px 3px rgba(244,250,80,0.8) !important;
+}
+
+.highlight_temp{
+  box-shadow: 0px 0px 20px 15px rgba(244,250,80,0.6) !important;
+}
+
+.highlight_pressure{
+  box-shadow: 0px 0px 20px 15px rgba(59,143,227,0.6) !important; 
 }
 
 .debug{
@@ -128,35 +190,76 @@ cursor: crosshair
 }
 
 
+.popup
+{
+border-left-color: var(--light-green) !important;
+border-right-color: var(--light-green) !important;
+border-bottom-color: var(--light-green) !important;
+border-top-color: var(--light-green) !important;
+opacity: 0.8;
+}
+
+.popup .mapboxgl-popup-content {
+  background-color: var(--light-green);
+  opacity: 0.8;
+  pointer-events: none !important;
+  touch-action: none; !important;
+}
+
+.popup2
+{
+border-left-color: var(--dark-green) !important;
+border-right-color: var(--dark-green) !important;
+border-bottom-color: var(--dark-green) !important;
+border-top-color: var(--dark-green) !important;
+opacity: 0.8;
+}
+
+
+
+.popup2 .mapboxgl-popup-content {
+  background-color: var(--dark-green);
+  opacity: 0.8;
+  pointer-events: none !important;
+  touch-action: none; !important;
+}
+
+    
+
+
+
+
 
 .mapboxgl-popup-anchor-top .mapboxgl-popup-tip,
 .mapboxgl-popup-anchor-top-left .mapboxgl-popup-tip,
 .mapboxgl-popup-anchor-top-right .mapboxgl-popup-tip {
-    border-bottom-color: #a9d6af;
-     opacity: 0.9;
+    border-bottom-color: inherit;
+     opacity: 0.8;
     }
 .mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip,
 .mapboxgl-popup-anchor-bottom-left .mapboxgl-popup-tip,
 .mapboxgl-popup-anchor-bottom-right .mapboxgl-popup-tip {
-    border-top-color: #a9d6af;
-     opacity: 0.9;
+    border-top-color: inherit;
+     opacity: 0.8;
     }
 .mapboxgl-popup-anchor-left .mapboxgl-popup-tip {
-    border-right-color: #a9d6af;
+    border-right-color: inherit;
      opacity: 0.8;
     }
 .mapboxgl-popup-anchor-right .mapboxgl-popup-tip {
-    border-left-color: #a9d6af;
+    border-left-color: inherit;
      opacity: 0.8;
     }
     
+    
+
     
 .lds-spinner {
   /* color: official;*/
   display: none; 
   position: absolute;
   top: 40%;
-  left:40%;
+  left:50%;
   margin-left:-40px;
   width: 80px;
   height: 80px;
@@ -242,7 +345,7 @@ cursor: crosshair
 #arrow p span {
   position: fixed;
   top:90%;
-  left: 90%;
+  left: 85%;
   width: 24px;
   height: 24px;
   margin-left: -12px;
@@ -279,4 +382,33 @@ cursor: crosshair
     transform: rotate(-45deg) translate(-20px, 20px);
     opacity: 0;
   }
+}
+
+
+@keyframes expand {
+  0% {
+    width: 70%; /* Start with full height */
+  }
+  100% {
+    width: 100%; /* End with no height (collapsed) */
+  }
+}
+
+@keyframes collapse {
+  0% {
+    width: 100%; /* Start with full height */
+  }
+  100% {
+    width: 70%; /* End with no height (collapsed) */
+  }
+}
+
+.expand-animation {
+    overflow: hidden; /* Hide the content that overflows during the animation */
+    animation: expand 1s ease-in-out forwards; /* Adjust the duration as needed (e.g., 3s) */
+}
+
+.collapse-animation {
+    overflow: hidden; /* Hide the content that overflows during the animation */
+    animation: collapse 1s ease-in-out forwards; /* Adjust the duration as needed (e.g., 3s) */
 }

@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
 <link href="https://api.mapbox.com/mapbox-gl-js/v2.11.0/mapbox-gl.css" rel="stylesheet">
-<script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-language/v1.0.0/mapbox-gl-language.js'></script>
+    <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-language/v1.0.0/mapbox-gl-language.js'></script>
 
 <script src="config.js"></script>
 <script src="https://api.mapbox.com/mapbox-gl-js/v2.11.0/mapbox-gl.js"></script>
@@ -22,11 +22,11 @@
 
 
 
-  <div id="container">
-
-
-
-    <div class="lds-spinner" id="spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
+<div id="container" class="container">
+<div id="timed" class="timer">
+Last updated: <span id="lastupdated">(loading)</span>
+</div>
+<div class="lds-spinner" id="spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
 
 <!-- hidden hitcounter -->
 <div class ="hidden">
@@ -36,71 +36,116 @@ border="0" alt="HTML Hit Counters"></a>
 <br><a href="https://www.easycounter.com/">Hit counter</a>
 </div>
 
-    <div id="map">
+
+<div id="map"></div>
+<div id="map2"></div>
+<div id ="verticalbar" class="verticalbar"></div>
+</div>
 
 
 
-
-    </div>
-
-
-
-
-
-    <div id="blurb" class="blurb">
-
-    <section id="arrow" class="demo">
+<div id="blurb container" class="blurbcontainer">
+<div id="blurb" class="blurb">
+<section id="arrow" class="demo">
 <p><span></span></p>
 </section>
-
-
 <div class ="debug" id="debugdiv"> Input:<input type="text" id="myText" value="Tue Nov 28 2023 07:10:00Z"> 
     <button type="button" onclick="manuallyupdatetime()">Move Time!</button> 
     </div>
-
 </form>
-
-
-
-
 <h1>The Borsuk-Ulam Explorer<br><span class="authors">by Colin Cotter and Julius Ross</span></h1>
 
-
-
+<!-- ><p>Please consider <a href="https://tiptopjar.com/juliusross" target="_blank">tipping</a> to offset the running costs to keep this page free for all to use.-->
 
      <p class = "heading">What is this?</p>
-      <p>The two maps on the left display opposite sides of the earth, and the green bubbles show the temperature and air pressure right now at locations directly opposite each other.
-      <p>You probably would not expect it, but there are pairs of locations directly opposite each other with exactly the same temperature.  Drag the map to move it, and see if you can find any for yourself (if you get stuck, try moving the bubble along the equator and see what happens.
+      <p>The two maps on the left display opposite sides of the earth, and the orange and green labels show the current temperature and air pressure at locations directly opposite each other.
+      <p>You probably would not expect it, but there are pairs of locations directly opposite each other with exactly the same temperature.  Drag the maps to move them, and see if you can find any for yourself (if you get stuck, try moving the labels slowly around the equator which is shown by a thin black line).
       
       <p> It is also possible to find pairs of locations directly opposite each other with exactly the same air pressure.  See if you can find any yourself. 
       
            
 <p> An amazing mathematical fact, called the Borsuk-Ulam Theorem, says that at any moment in time there is always a pair of locations directly opposite each other with exactly the same temperature <i>and</i> exactly the same pressure!
-<p>An example of a pair of such locations is shown on the map with blue and brown markers.   Zoom in to the map to see this for yourself...
- <p class = "heading">What do the numbers in the bubbles mean?</p>
-<p> The temperature is the air temperature at 2 meters above the surface and is measured in degrees centigrade (C).  The pressure is what is called the "mean sea level pressure" and is measured in kilo Pascals (kPa).  The latitude and longitude give the position of the location, measured in degrees.
-       <p class = "heading"> How recent are the temperature and pressure data?</p>
- <p>The temperature and pressure numbers are the best guess estimates on <span id="lastupdated">(loading)</span>.  The maps update themselves automatically (usually every minute), at which point you may see the markers move since the temperature and pressure will have changed.
-
- <p class = "heading">Who discovered this?</p>
-  <p> The mathematics that underlies this fact was discovered in the 1930s, and is attributed to Karol Borsuk and Stanisław Ulam.  It is now called the Borsuk-Ulam Theorem which is part of the field of Algebraic Topology.
+<p>An example of a pair of such locations is shown on the maps with blue and brown markers.   Zoom in the maps to see this for yourself...
+ <p class = "heading">What do the numbers in the labels mean?</p>
+<p> The temperature is the air temperature at 2 meters above the surface and is measured in degrees centigrade (C).  The pressure is something called the "mean sea level pressure" and is measured in kilo Pascals (kPa).  The latitude and longitude give the position of the location, measured in degrees.
+<p class = "heading"> Why does there exist a pair of locations opposite each other with exactly the same temperature?</p>
+<p> With this explorer you can see this for yourself.  Move the orange label to the equator and find any location where the temperature it shows is <i>higher</i> than the temperature shown in the green label.   Now move the orange label slowly around the equator.    When it gets exactly half way around it will be opposite to where it started, which is where the green one used to be.  So the temperatures in the two labels will have swapped around, meaning the orange label now shows a temperature that is <i>lower</i> than the temperature shown in the green one.  
+<p> So at the start the orange label showed a <i>higher</i> temperature than the green one, and at the end it shows a <i>lower</i> temperature than the green one.  So there must be at least one point inbetween where they are exactly the same, and this will give you opposite locations with the same temperature (mathematicians call this the "<a href="https://en.wikipedia.org/wiki/Intermediate_value_theorem" target="_blank">Intermediate Value Theorem</a>").
+<p class = "heading"> What about for both temperature and pressure at the same time?</p>
+  <p> The mathematics behind the Borsuk-Ulam Theorem is more advanced, was developed in the 1930s, and is attributed to Karol Borsuk and Stanisław Ulam.  It is part of the field of algebraic topology and is taught in college-level mathematics.
    <p class = "heading">Does this only work for temperature and air pressure?</p>
   <p> Not at all! It also works for any other pairs of measurements, for example you could use temperature and humidity instead.    What is needed is that the measurements are "continuous" which means that if you move on the surface of the earth just a little bit then the measurement also changes by just a little bit.
      <p class = "heading">Can you do this for three or more measurements?</p>
      <p> You can only use two measurements on the surface of the earth, because the surface is two dimensional.  But mathematically speaking, you can consider a planet in four dimensional space whose surface will have three dimensions, and then there is a version of the Borsuk-Ulam Theorem that works for any three continuous measurements (similarly on a planet whose surface has four dimensions you can use four measurements and so on).
      <p class = "heading">Where can I find out more?</p>
-   <p> There are plenty of places to find out more on the Borsuk-Ulam  Theorem, for instance <a href="https://en.wikipedia.org/wiki/Borsuk%E2%80%93Ulam_theorem" target=”_blank”>Wikipedia</a> or this <a href="https://www.youtube.com/watch?v=z75B8iP1Y3g" target=”_blank”>YouTube video</a>.   And if you want to know about the excitement of being a mathematician we recommend Stanisław Ulam's Book "<a href="https://www.goodreads.com/en/book/show/423246" target=”_blank”>Adventures of a Mathematician</a>".
+   <p> There are plenty of places to find out more on the Borsuk-Ulam  Theorem, for instance <a href="https://en.wikipedia.org/wiki/Borsuk%E2%80%93Ulam_theorem" target=”_blank”>Wikipedia</a> or this <a href="https://www.youtube.com/watch?v=z75B8iP1Y3g" target=”_blank”>YouTube video</a>.  A good college-level introduction to the subject is <a href="https://www.goodreads.com/book/show/423247.Using_the_Borsuk_Ulam_Theorem"  target=”_blank”>Using the Borsuk-Ulam Theorem </a>.  And if you want to know about the excitement of being a mathematician we recommend Stanisław Ulam's Book "<a href="https://www.goodreads.com/en/book/show/423246" target=”_blank”>Adventures of a Mathematician</a>" (which is also a <a href="https://www.imdb.com/title/tt6875374/" target="_blank">movie</a>).
    <p class = "heading"> Where does the temperature and air pressure data come from?</p>
-   <p>We use the most recent publically available <a href="https://www.ecmwf.int/">ECMWF</a> forecast for the present time.   We then apply a simple interpolation to extend this data in a continuous way to give a precise estimate of the temperature and air pressure everywhere on the map.  This page is not intended to provide weather forecasts and is for education purposes only.
+   <p>We use the most recent publically available <a href="https://www.ecmwf.int/">ECMWF</a> forecast for the present time.   We then apply a simple interpolation to extend this data in a continuous way to give a precise estimate of the temperature and air pressure everywhere on the map.  This page is not intended to provide weather information and is for education purposes only.  
+   
+<p>The maps update themselves automatically (usually every minute), at which point you may see the markers move since the temperature and pressure will have changed.
+
+
    <p class = "heading"> Who made this? </p>
-   <p> <a href="https://www.imperial.ac.uk/people/colin.cotter" target="_blank">Colin Cotter</a> (Imperial College, London) and <a href="https://sites.google.com/uic.edu/juliusross/home" target="_blank">Julius Ross</a> (University of Illinois at Chicago, supported by NSF-DMS 1749447).  You can provide feedback, or access the source code <a href="more.html">here</a>.
+   <p> <a href="https://www.imperial.ac.uk/people/colin.cotter" target="_blank">Colin Cotter</a> (Imperial College, London) and <a href="https://sites.google.com/uic.edu/juliusross/home" target="_blank">Julius Ross</a> (University of Illinois at Chicago, supported by NSF-DMS 1749447).  You can provide feedback, or access the source code <a href="more.html" target=”_blank”>here</a>.  
+   
+   <p>If you want to support keeping this page free for all to use, please consider <a href="https://tiptopjar.com/juliusross" target="_blank">tipping</a>.
+   
+
     </div>
-    <div id="map2"></div>
 </div>
+
+
 <script>
 
+var expanded = false
+var map,map2 
+function handleexpand()
+{ var container = document.getElementById('container');
+ // Add the class to trigger the animation
+ 
+ if (expanded==false) {
+ 	console.log('expanding')
+ 	container.classList.remove('expand-animation');
+ 	container.classList.remove('collapse-animation');
+ 	container.classList.add('expand-animation');
+ 	expanded = true
+ 	 container.addEventListener('animationend', function() {
+    // This function will be called when the animation is finished
+    console.log('Animation finished!');
+    // Call your custom function here if needed
+    
+    
+         map.resize()
+    map2.resize()
 
     
+  	});
+ 	}
+ else
+ {	console.log('collapsing')
+	container.classList.remove('expand-animation');
+	container.classList.remove('collapse-animation');
+ 	container.classList.add('collapse-animation');
+ 	expanded = false
+ 	
+ 	container.addEventListener('animationend', function() {
+    // This function will be called when the animation is finished
+    console.log('Animation finished!');
+    // Call your custom function here if needed
+    
+    map.resize()
+    map2.resize()
+    
+ 	
+  	});
+ 	}
+  
+}
+
+
+// Add a click event listener to the div
+var verticalbar = document.getElementById('verticalbar');
+verticalbar.addEventListener('click', handleexpand);   
 
 // Todo
 // Check the weather data against real data (have we flipped it all around?)
@@ -146,19 +191,37 @@ if ((scrollableDiv.scrollTop+scrollableDiv.offsetHeight)>scrollableDiv.scrollHei
 )
 
 // Mapbox variables
-var map,map2 
+
 marker1 = new mapboxgl.Marker({color: "#9a9065"})
 marker2 = new mapboxgl.Marker()
 marker3 = new mapboxgl.Marker({color: "#9a9065"})
 marker4 = new mapboxgl.Marker()
 
 
+var latitudeLine = {
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [-180, 0], // Replace YOUR_LATITUDE with the desired latitude
+          [180, 0]
+        ]
+      }
+    }
+  ]
+};
+
 const popup = new mapboxgl.Popup({
+	className: 'popup',
 	closeButton: false,
 	closeOnClick: false
   });
   
 const popup2 = new mapboxgl.Popup({
+	className: 'popup2',
 	closeButton: false,
 	closeOnClick: false
   });
@@ -272,7 +335,7 @@ function getclimatevariables(p)
 	var pressure_decimals
 	var coordinate_decimals
 	if (zoom<2)
-		{temp_decimals=1;pressure_decimals=1;coordinate_decimals=1 }
+		{temp_decimals=1;pressure_decimals=2;coordinate_decimals=1 }
 	else if (zoom<3)
 		{temp_decimals=2;pressure_decimals=2;coordinate_decimals=2 }
 	else if (zoom<4)
@@ -460,13 +523,29 @@ function updatepopuptexts()
 
 	//Highlight all popups if cursor is over ulam point
 	const elements = document.querySelectorAll('.mapboxgl-popup-content');
-	if ((popup_climate.temp  == popup2_climate.temp) && (popup_climate.pressure  ==	popup2_climate.pressure))
+	if ((popup_climate.temp  == popup2_climate.temp) && (popup_climate.pressure == popup2_climate.pressure))
 	{
+	elements.forEach((element)=>element.classList.remove("highlight_pressure"));
+	elements.forEach((element)=>element.classList.remove("highlight_temp"));
 	elements.forEach((element)=>element.classList.add("highlight"));
+	}
+	else if ((popup_climate.temp  == popup2_climate.temp))
+	{
+		elements.forEach((element)=>element.classList.remove("highlight"));
+	elements.forEach((element)=>element.classList.remove("highlight_pressure"));
+	elements.forEach((element)=>element.classList.add("highlight_temp"));
+	}
+	else if ((popup_climate.pressure  == popup2_climate.pressure))
+	{
+	elements.forEach((element)=>element.classList.remove("highlight"));
+	elements.forEach((element)=>element.classList.remove("highlight_temp"));
+	elements.forEach((element)=>element.classList.add("highlight_pressure"));
 	}
 	else
 	{
 	elements.forEach((element)=>element.classList.remove("highlight"));
+	elements.forEach((element)=>element.classList.remove("highlight_pressure"));
+	elements.forEach((element)=>element.classList.remove("highlight_temp"));
 	}
 		
 	}
@@ -493,9 +572,10 @@ function mapBoxInit()
 	maxZoom: 12, 
 	minZoom: 1,
 	zoom: 0,
-	center: [0, 50],
+	center: [260, 30],
 	style: 'mapbox://styles/juliusross/clp16b25v00vm01pe2pzgbebz',
 	projection: 'globe',
+	attributionControl: false
 	});
   
 	// define the second map
@@ -504,11 +584,15 @@ function mapBoxInit()
 	maxZoom: 12, 
 	minZoom: 1,
 	zoom: 0,
-	center: [180, -50],
+	center: [80, -30],
 	style: 'mapbox://styles/juliusross/clp16b25v00vm01pe2pzgbebz',
 	projection: 'globe',
-	hash: false
+	hash: false,
+	attributionControl: false
 	});
+	
+
+
 	
 	const language = new MapboxLanguage();
 	map.addControl(language);
@@ -518,7 +602,7 @@ function mapBoxInit()
    
 	// these two variables are being used to keep track of the popup locations
 	// they should not really be used in this way but it is fine for now
-	popup_location= {'lat': 50, 'lng':10}
+	popup_location= {'lat': 50, 'lng':-80}
 	popup2_location = get_antipodal(popup_location)
 	
 	
@@ -537,6 +621,28 @@ function mapBoxInit()
 
 	 map.on('load', () => {
 	 // Once map is loaded add the markers and the popup
+	 
+	 // Add the equator
+	 	map.addSource('latitude-line', {
+  'type': 'geojson',
+  'data': latitudeLine
+});
+	
+	map.addLayer({
+  'id': 'latitude-line',
+  'type': 'line',
+  'source': 'latitude-line',
+  'layout': {
+    'line-join': 'round',
+    'line-cap': 'round'
+  },
+  'paint': {
+    'line-color': 'black', // Change the color as desired
+    'line-width': 0.25,
+    'line-dasharray': [1, 4],
+  }
+});
+	 
 	 marker1.setLngLat(ulam1).addTo(map);	
 	 marker2.setLngLat(ulam2).addTo(map);
 	 spinnerdiv.style.display = 'none';
@@ -546,6 +652,29 @@ function mapBoxInit()
    
 	map2.on('load', () => {
 	// Once map2 is loaded add the markers and the popup
+	
+	 // Add the equator
+	 	map2.addSource('latitude-line', {
+  'type': 'geojson',
+  'data': latitudeLine
+});
+	
+	map2.addLayer({
+  'id': 'latitude-line',
+  'type': 'line',
+  'source': 'latitude-line',
+  'layout': {
+    'line-join': 'round',
+    'line-cap': 'round'
+  },
+  'paint': {
+    'line-color': 'black', // Change the color as desired
+    'line-width': 0.25,
+    'line-dasharray': [1, 4],
+  }
+});
+
+
 	 marker3.setLngLat(ulam1).addTo(map2);	
 	 marker4.setLngLat(ulam2).addTo(map2);	  
 	 spinnerdiv.style.display = 'none';   		
@@ -555,8 +684,9 @@ function mapBoxInit()
   
 	// Add zoom and rotation controls to the maps.
 	map.addControl(new mapboxgl.NavigationControl({showCompass: false}),'top-left');
-	map2.addControl(new mapboxgl.NavigationControl({showCompass: false}),'top-left');
+	//map2.addControl(new mapboxgl.NavigationControl({showCompass: false}),'top-left');
 
+	map.addControl(new mapboxgl.AttributionControl(), 'top-right');
 	// coordination between the two maps and updating of the text of the popups
 	var disable = false;
 	map.on("move", function () {
