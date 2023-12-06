@@ -11,8 +11,8 @@
 #
 # 1. Scrape most recent data from ecmwf at given time and date
 # 2. Compute ulampoints at certain intervals between timestep firststep and timestep laststep
-# 3. Creates two javascript files.  One is bu-date-firststep-laststep.js that has all the ulam 
-#    points and the temp/pressure data at firsttime and lasttime.  The second is bu-latest-data.js that is smaller and just
+# 3. Creates three javascript files.  One is bu-date-firststep-laststep.js that has all the ulam 
+#    points and the temp/pressure data at firsttime and lasttime.  The second just contains the ulam points.  The third is bu-latest-data.js that is smaller and just
 #    points to the first file.
 # 5. Copy these two javascript file to my Amazon S3 bucket
 #
@@ -114,7 +114,11 @@ ulamlist_cropped = [[numpy.timedelta64(ulam['ulamstep'], 's').astype(float),ulam
 logger.info('ulamlist length: '+ str(len(ulamlist))+ ' of which '+ str(len(ulamlist_cropped))+ ' were found within tolerance')
 
 bu_filename = 'bu-'+numpy.datetime_as_string(ds.time.data,'D')+'T'+ str(args.time)+'h:'+str(firststep)+':'+str(laststep)+'.js'
+bu_ulampoints_filename = 'bu-ulampoints-'+numpy.datetime_as_string(ds.time.data,'D')+'T'+ str(args.time)+'h:'+str(firststep)+':'+str(laststep)+'.js'
+
+
 bu_local_filename = bu_local_directory+bu_filename
+bu_ulampoints_local_filename = bu_local_directory+bu_ulampoints_filename
 
 ds0=ds.sel(step=steps[0])
 ds1=ds.sel(step=steps[1])
@@ -134,8 +138,19 @@ logging.info('Writing bu.js file')
 f.write('var bu=' + json.dumps(bu)+'\n')
 f.close
 
+bu_ulampoints = {
+'ds_datetime':  numpy.datetime_as_string(numpy.datetime64(ds.time.data, 'ms')), 
+'ulamlist': ulamlist_cropped,
+'initial_timestep': numpy.timedelta64(ds0.step.data, 's').astype(float),
+'final_timestep': numpy.timedelta64(ds1.step.data, 's').astype(float),
+}
+f = open(bu_ulampoints_local_filename, 'w' )
+logging.info('Writing bu.js file')
+f.write('var bu=' + json.dumps(bu_ulampoints)+'\n')
+f.close
+
 #
-# Create a smaller javascript file that points to the above data file 
+# Create a smaller javascript file that points to the larger bu data file 
 #
 
 bu_datafile = bu_local_directory+'bu-latest-data.js'
@@ -163,6 +178,11 @@ if (args.s3dryrun==0):
 	# Copy the gzipped javascript data file to S3 bucket
 	logger.info('Copying zipped bu file '+str(bu_local_filename)+' to S3 bucket '+str(s3bufilesdirectory))
 	subprocessoutput=subprocess.run(["aws s3 cp "+bu_local_filename+'.gz'+' '+s3bufilesdirectory+' --content-encoding gzip'], shell=True)
+	logger.info(subprocessoutput)
+	
+	# Copy the ulampoints file to the S3 bucket
+	logger.info('Copying bu-ulampoints file '+str(bu_ulampoints_local_filename)+' to S3 bucket '+str(s3bufilesdirectory))
+	subprocessoutput=subprocess.run(["aws s3 cp "+bu_ulampoints_local_filename+' '+s3bufilesdirectory], shell=True)
 	logger.info(subprocessoutput)
 
 logger.info('ECMWF script finished')
