@@ -1,7 +1,30 @@
+#
+# Package to numerically find ulam points from ECMWF data
+#
+#
+# Typical use
+# from ecmwf.opendata import Client
+# client = Client()
+# result  = client.retrieve(step=[0,6],type="cf",param = ["2t","msl"],target="data.grib2",)
+# ds = xr.open_dataset('data.grib2',engine='cfgrib')
+# compute_ulampoints_between_timesteps(ds)
+#
+# 
+#
+# ds0=ds.sel(step='0:00:00')
+# t=ds0['t2m'].data 
+# p=ds0['t2m'].data
+# lat = ds0['latitude']
+# long = ds0['longitude']
+#
+# findulam(t,p,lat,long)
+# 
+
+
 #Todo:
 #Allow for optional data from the ds source; else the first two data sources should be used
 #Options for logging
-
+#Possibly ulamlist would be better as a list of json elements
 
 import netCDF4
 import xarray as xr
@@ -27,10 +50,6 @@ def wraplatlong(x):
 
 
 def findulam(t,p,lat,long,**kwargs):
-	#  Fix the tolerance	
-	
-
-
 	""" Numerically Computes an ulam point from temperature and pressure data.  
 	If an initialguess is given then start with the scipy.optimize.basinhopping method starting at this initialguess
 	If either initialguess is not given, or the basinhopping does not give an answer within tolerance
@@ -77,9 +96,6 @@ def findulam(t,p,lat,long,**kwargs):
 	#construct an interpolator
 	f = interpolate.RegularGridInterpolator((lat, long), t-t2,bounds_error=False)
 
-	ft = interpolate.RegularGridInterpolator((lat, long), t)
-	ft2 = interpolate.RegularGridInterpolator((lat, long), t2)
-
 	## Pressure
 	#make a copy to contain the antipodal values
 	p2 = 0.*p
@@ -121,11 +137,11 @@ def findulam(t,p,lat,long,**kwargs):
 		if (ret.fun<tolerance):
 			skip_optimizing_with_differential_evolution = True
 		else:
-			logger.info('Basinhopping failed to get within tolerance')
-			logger.info(ret)
+			logger.debug('Basinhopping failed to get within tolerance')
+			logger.debug(ret)
 			
 	if skip_optimizing_with_differential_evolution==False:
-		logger.info('Runnning differential_evolution')
+		logger.debug('Runnning differential_evolution')
 		bounds = [(-90.0,90.0),(-180.0,180.0)]	
 		ret = optimize.differential_evolution(fsq, bounds)
 		
@@ -153,7 +169,7 @@ def compute_ulampoint_between_timesteps(ds,timestep_start,timestep_end,i,N,**kwa
 	'ulampoint' - [lat,lng] of the ulampoint found
 	'ulamtime'  - the specific time used to compute the ulampoint
 	'fun' - (difference of temperature)^2 + difference of pressure)^2 at the ulampoint and its antipodal
-	'OptimizeResult_basinhopping' - OptimizeResult of the basinhopping method	
+	'OptimizeResult' - OptimizeResult of the method	used
 	"""
 	# Todo: Return error if i is not between 0 and N
 	
@@ -230,22 +246,10 @@ def compute_ulampoints_between_timesteps(ds,**kwargs):
 			computedulam = compute_ulampoint_between_timesteps(ds,steps[j],steps[j+1],i,N,**parameters)
 			ulamlist.append(computedulam)
 			text=computedulam['ulampoint'], computedulam['ulamtime'],computedulam['ulamstep'],computedulam['OptimizeResult'].fun,computedulam['OptimizeResult'].nit
-			logger.info(text)
+			logger.debug(text)
 			initialguess = computedulam['ulampoint']
 	return(ulamlist)
 	
 
 
-
-
-# This is just to make debugging quicker
-#open the datasource
-# ds = xr.open_dataset('data.grib2',engine='cfgrib')
-# N=12
-# ds0=ds.sel(step='12:00:00')
-# t=ds0['t2m'].data 
-# p=ds0['t2m'].data
-# lat = ds0['latitude']
-# long = ds0['longitude']
-# ulam = findulam(t,p,lat,long)
 
