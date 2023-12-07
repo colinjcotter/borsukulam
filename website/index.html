@@ -24,6 +24,13 @@
 
 
 <div id="container" class="container">
+
+
+<div id="disabledmessage" class="disabled"> Page down, likely due to high demand.  Please come back another time </div>
+
+<!-- >  <div id="fullscreen-icon"></div>
+  <div id="exit-fullscreen-icon"></div>-->
+
 <div id="timed" class="timer">
 Last updated: <span id="lastupdated">(loading)</span>
 </div>
@@ -40,7 +47,16 @@ border="0" alt="HTML Hit Counters"></a>
 
 <div id="map"></div>
 <div id="map2"></div>
-<div id ="verticalbar" class="verticalbar"><div id="smallarrow" class="smallarrow right"></div></div>
+
+<div id ="verticalbar" class="verticalbar">
+
+<div class="fullscreen-button" onclick="toggleFullscreen()"></div>
+
+
+
+<div id="smallarrow" class="smallarrow right" onclick="handleexpand()"></div><div id="smallarrow" class="smallarrow right"></div></div>
+</div></div>
+
 </div>
 
 
@@ -54,6 +70,8 @@ border="0" alt="HTML Hit Counters"></a>
     <button type="button" onclick="manuallyupdatetime()">Move Time!</button> 
     </div>
 </form>
+
+  
 <h1>The Borsuk-Ulam Explorer<br><span class="authors">by Colin Cotter and Julius Ross</span></h1>
 
 <!-- ><p>Please consider <a href="https://tiptopjar.com/juliusross" target="_blank">tipping</a> to offset the running costs to keep this page free for all to use.-->
@@ -98,15 +116,47 @@ border="0" alt="HTML Hit Counters"></a>
 
 <script>
 
+
+
+function toggleFullscreen() {
+  const element = document.documentElement;
+
+  if (!document.fullscreenElement) {
+    if (element.requestFullscreen) {
+      element.requestFullscreen();
+    } else if (element.mozRequestFullScreen) {
+      element.mozRequestFullScreen();
+    } else if (element.webkitRequestFullscreen) {
+      element.webkitRequestFullscreen();
+    } else if (element.msRequestFullscreen) {
+      element.msRequestFullscreen();
+    }
+  } else {
+    if (document.exitFullscreen) {
+      document.exitFullscreen();
+    } else if (document.mozCancelFullScreen) {
+      document.mozCancelFullScreen();
+    } else if (document.webkitExitFullscreen) {
+      document.webkitExitFullscreen();
+    } else if (document.msExitFullscreen) {
+      document.msExitFullscreen();
+    }
+  }
+}
+
+
+
+
+
 var expanded = false
 var map,map2 
 function handleexpand()
 // Handler for the expanding and collapsing of the explaination text
 { 
+	console.log('expanding')
 	var container = document.getElementById('container');
 	var smallarrow = document.getElementById('smallarrow');
 	 // Add the class to trigger the animation
- 
 	 if (expanded==false) {
 		container.classList.remove('expand-animation');
 		container.classList.remove('collapse-animation');
@@ -170,15 +220,15 @@ function handleexpand()
 
 
 // Add a click event listener to expand and collapse the explaination text
-var verticalbar = document.getElementById('verticalbar');
-verticalbar.addEventListener('click', handleexpand);   
+//var verticalbar = document.getElementById('verticalbar');
+//verticalbar.addEventListener('click', handleexpand);   
 
 var spinnerdiv = document.getElementById('spinner');  // Used for the spinner that appears when updating the time at which data is being shown
 
 
 //
 // Initialization of various data
-// I am a little concerned about what happens if the bu file is slow to load
+// 
 
 if (debugmode == 1){
 var debugdiv = document.getElementById('debugdiv');  // Used for the spinner that appears when updating the time at which data is being shown
@@ -202,7 +252,6 @@ var blurb = document.getElementById('blurb');
 scrollableDiv.addEventListener('scroll', function() {
 if ((scrollableDiv.scrollTop+scrollableDiv.offsetHeight)>scrollableDiv.scrollHeight-10)
 	{
-	console.log('got here')
 	arrow.style.display = 'none'
 	}
 }
@@ -577,38 +626,51 @@ function mapBoxInit()
 	
 	// Show the spinner for 2 seconds.  Not really needed but I think good UI as it may appear later
 	spinnerdiv.style.display = 'inline-block';
-	setTimeout( ()=> {spinnerdiv.style.display = 'none';} , 2000);
+	
 
+	
+	
+	setTimeout( ()=> {spinnerdiv.style.display = 'none';} , 500);
 
+	if (typeof mapboxaccesstoken === typeof undefined)
+	{
+	console.log('loading disable message')
+	var disableddiv = document.getElementById('disabledmessage');
+	disableddiv.style.visibility = 'visible'
+	}
   
 	// mapbox access token
 	mapboxgl.accessToken = mapboxaccesstoken;
 
-	// define the first map
-	map = new mapboxgl.Map({
-	container: 'map',
-	maxZoom: 12, 
-	minZoom: 1,
-	zoom: 0,
-	center: [260, 30],
-	style: 'mapbox://styles/juliusross/clp16b25v00vm01pe2pzgbebz',
-	projection: 'globe',
-	attributionControl: false
-	});
-  
-	// define the second map
-	map2 = new mapboxgl.Map({
-	container: 'map2',
-	maxZoom: 12, 
-	minZoom: 1,
-	zoom: 0,
-	center: [80, -30],
-	style: 'mapbox://styles/juliusross/clp16b25v00vm01pe2pzgbebz',
-	projection: 'globe',
-	hash: false,
-	attributionControl: false
-	});
 	
+	
+	// define the first map
+	if (debug_skipmaps ==0)
+	{
+		map = new mapboxgl.Map({
+		container: 'map',
+		maxZoom: 12, 
+		minZoom: 1,
+		zoom: 0,
+		center: [260, 30],
+		style: 'mapbox://styles/juliusross/clp16b25v00vm01pe2pzgbebz',
+		projection: 'globe',
+		attributionControl: false
+		});
+  
+		// define the second map
+		map2 = new mapboxgl.Map({
+		container: 'map2',
+		maxZoom: 12, 
+		minZoom: 1,
+		zoom: 0,
+		center: [80, -30],
+		style: 'mapbox://styles/juliusross/clp16b25v00vm01pe2pzgbebz',
+		projection: 'globe',
+		hash: false,
+		attributionControl: false
+		});
+	}
 
 
 	
