@@ -149,6 +149,8 @@ logging.info('Writing bu.js file')
 f.write('var bu=' + json.dumps(bu_ulampoints)+'\n')
 f.close
 
+s3bufilesdirectory = "s3://bursk-ulam-bufiles/"
+
 #
 # Create a smaller javascript file that points to the larger bu data file 
 #
@@ -163,7 +165,7 @@ with open(bu_datafile, 'w') as file:
 
 bu_datafile_url = bu_local_directory+'bu-latest-data-url.js'
 with open(bu_datafile_url, 'w') as file:
-	file.write('var bulatestdataurl="'+s3bufilesdirectory+'/'+bu_filename+'.gz"')
+	file.write('var bulatestdataurl="'+s3bufilesdirectory+bu_filename+'.gz"')
 	
 #
 # Move the files to the S3 buckets
@@ -176,12 +178,10 @@ if (args.s3dryrun==0):
 	logger.info(subprocessoutput)
 	
 	# Copy the smaller javascript file to S3 bucket (full url)
-	s3websitedirectory_fullurl = "s3://julius-ross.com/Borsuk-Ulam/" #Lets create a new bucket here from the get go
+	s3websitedirectory_fullurl = "s3://bursk-ulam-pointer/"
 	logger.info('Writing bu_datafile full url '+str(bu_datafile_url)+' to S3 bucket '+str(s3websitedirectory_fullurl))
 	subprocessoutput=subprocess.run(["aws s3 cp "+bu_datafile+' '+s3websitedirectory_fullurl+'bu-latest-data-pointer.js'], shell=True)
 	logger.info(subprocessoutput)
-
-	s3bufilesdirectory = "s3://bursk-ulam-bufiles/"
 
 	# Compress the data file
 	# TodoL Move this out of the s3 bucket dryrun command
