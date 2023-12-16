@@ -1,42 +1,44 @@
 <html lang="en">
-
 <head>
 <title>The Borsuk–Ulam Explorer</title>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
-<link href="https://api.mapbox.com/mapbox-gl-js/v2.11.0/mapbox-gl.css" rel="stylesheet">
-    <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-language/v1.0.0/mapbox-gl-language.js'></script>
 
-<script src="config.js"></script>
+<meta property="og:title" content="The Borsuk-Ulam Explorer">
+<meta property="og:image" content="http://julius-ross.com/Borsuk-Ulam/bu-og-image.jpg">
+<meta property="og:url" content="https://julius-ross.com/Borsuk-Ulam">
+
+
+<!-- Mapbox token; configuration; utility functions -->
 <script src="mapboxtoken.js"></script>
-<script src="https://api.mapbox.com/mapbox-gl-js/v2.11.0/mapbox-gl.js"></script>
+<script src="config.js"></script>
+<script src="utils.js"></script>
+<script src="web_utils.js"></script>
+<script src="https://s3.us-east-2.amazonaws.com/julius-ross.com/Borsuk-Ulam/bu-latest-data.js"></script>   
+
+<!-- Mapbox files -->
+<script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-language/v1.0.0/mapbox-gl-language.js'></script>
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.0.0/mapbox-gl.js"></script>
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.0.0/mapbox-gl.css" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js" charset="utf-8"></script>
 <link href="style.css" rel="stylesheet"></style>
-<script src="bu-latest-data.js"></script> 
-
-  
 </head>
-
 
 <body>
 
-
-
-
 <div id="container" class="container">
 
-
+<!-- Div for the message when the site is disabled -->
 <div id="disabledmessage" class="disabled"> Page down, likely due to high demand.  Please come back another time </div>
 
-<!-- >  <div id="fullscreen-icon"></div>
-  <div id="exit-fullscreen-icon"></div>-->
+<!-- Div for the Last updated text -->
+<div id="timed" class="timer">Last updated: <span id="lastupdated">(loading)</span></div>
 
-<div id="timed" class="timer">
-Last updated: <span id="lastupdated">(loading)</span>
-</div>
+<!-- Div for the spinner -->
 <div class="lds-spinner" id="spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
 
-<!-- hidden hitcounter -->
+<!-- Div for the hit counter (hidden) -->
 <div class ="hidden">
 <a href="https://www.easycounter.com/">
 <img src="https://www.easycounter.com/counter.php?juliusross"
@@ -44,813 +46,60 @@ border="0" alt="HTML Hit Counters"></a>
 <br><a href="https://www.easycounter.com/">Hit counter</a>
 </div>
 
-
-<div id="map"></div>
-<div id="map2"></div>
-
-<div id ="verticalbar" class="verticalbar">
-
-<div class="fullscreen-button" onclick="toggleFullscreen()"></div>
-
-
-
-<div id="smallarrow" class="smallarrow right" onclick="handleexpand()"></div><div id="smallarrow" class="smallarrow right"></div></div>
+<!-- Div for the two maps -->
+<div>
+<div id="map"></div></div>
+<div><div id="map2"></div></div>
 </div></div>
-
 </div>
 
 
-
+<!-- Explaination text -->
 <div id="blurb container" class="blurbcontainer">
 <div id="blurb" class="blurb">
 <section id="arrow" class="demo">
-<p><span></span></p>
-</section>
+<p><span></span></p></section>
+<!--  Div for the debug mode -->
 <div class ="debug" id="debugdiv"> Input:<input type="text" id="myText" value="Tue Nov 28 2023 07:10:00Z"> 
-    <button type="button" onclick="manuallyupdatetime()">Move Time!</button> 
-    </div>
+<button type="button" onclick="manuallyupdatetime()">Move Time!</button> 
+</div>
 </form>
 
   
 <h1>The Borsuk-Ulam Explorer<br><span class="authors">by Colin Cotter and Julius Ross</span></h1>
+<p class = "heading">What is this?</p>
+<p>The two maps on the left display opposite sides of the earth, and the orange and green labels show the current temperature and air pressure at locations directly opposite each other.
+<p>You probably would not expect it, but there are pairs of locations directly opposite each other with exactly the same temperature.  Drag the maps to move them, and see if you can find any for yourself (if you get stuck, try moving the labels slowly around the equator which is shown by a thin black line).
 
-<!-- ><p>Please consider <a href="https://tiptopjar.com/juliusross" target="_blank">tipping</a> to offset the running costs to keep this page free for all to use.-->
+<p> It is also possible to find pairs of locations directly opposite each other with exactly the same air pressure.  Can you find any? 
 
-     <p class = "heading">What is this?</p>
-      <p>The two maps on the left display opposite sides of the earth, and the orange and green labels show the current temperature and air pressure at locations directly opposite each other.
-      <p>You probably would not expect it, but there are pairs of locations directly opposite each other with exactly the same temperature.  Drag the maps to move them, and see if you can find any for yourself (if you get stuck, try moving the labels slowly around the equator which is shown by a thin black line).
-      
-      <p> It is also possible to find pairs of locations directly opposite each other with exactly the same air pressure.  See if you can find any yourself. 
-      
-           
+   
 <p> An amazing mathematical fact, called the Borsuk-Ulam Theorem, says that at any moment in time there is always a pair of locations directly opposite each other with exactly the same temperature <i>and</i> exactly the same pressure!
-<p>An example of a pair of such locations is shown on the maps with blue and brown markers.   Zoom in the maps to see this for yourself...
- <p class = "heading">What do the numbers in the labels mean?</p>
+<p>An example of a pair of such locations is shown on the maps with blue and brown spots.   Zoom in the maps to see this for yourself...
+<p class = "heading">What do the numbers in the labels mean?</p>
 <p> The temperature is the air temperature at 2 meters above the surface and is measured in degrees centigrade (C).  The pressure is something called the "mean sea level pressure" and is measured in kilo Pascals (kPa).  The latitude and longitude give the position of the location, measured in degrees.
 <p class = "heading"> Why does there exist a pair of locations opposite each other with exactly the same temperature?</p>
-<p> With this explorer you can see this for yourself.  Move the orange label to the equator and find any location where the temperature it shows is <i>higher</i> than the temperature shown in the green label.   Now move the orange label slowly around the equator.    When it gets exactly half way around it will be opposite to where it started, which is where the green one used to be.  So the temperatures in the two labels will have swapped around, meaning the orange label now shows a temperature that is <i>lower</i> than the temperature shown in the green one.  
+<p> This explorer can help you understand why this is the case.  Move the orange label to the equator and find any location where the temperature it shows is <i>higher</i> than the temperature shown in the green label.   Now move the orange label slowly around the equator.    When it gets exactly half way around it will be opposite to where it started, which is where the green one used to be.  So the temperatures in the two labels will have swapped around, meaning the orange label now shows a temperature that is <i>lower</i> than the temperature shown in the green one.  
 <p> So at the start the orange label showed a <i>higher</i> temperature than the green one, and at the end it shows a <i>lower</i> temperature than the green one.  So there must be at least one point inbetween where they are exactly the same, and this will give you opposite locations with the same temperature (mathematicians call this the "<a href="https://en.wikipedia.org/wiki/Intermediate_value_theorem" target="_blank">Intermediate Value Theorem</a>").
 <p class = "heading"> What about for both temperature and pressure at the same time?</p>
-  <p> The mathematics behind the Borsuk-Ulam Theorem is more advanced, was developed in the 1930s, and is attributed to Karol Borsuk and Stanisław Ulam.  It is part of the field of algebraic topology and is taught in college-level mathematics.
-   <p class = "heading">Does this only work for temperature and air pressure?</p>
-  <p> Not at all! It also works for any other pairs of measurements, for example you could use temperature and humidity instead.    What is needed is that the measurements are "continuous" which means that if you move on the surface of the earth just a little bit then the measurement also changes by just a little bit.
-     <p class = "heading">Can you do this for three or more measurements?</p>
-     <p> You can only use two measurements on the surface of the earth, because the surface is two dimensional.  But mathematically speaking, you can consider a planet in four dimensional space whose surface will have three dimensions, and then there is a version of the Borsuk-Ulam Theorem that works for any three continuous measurements (similarly on a planet whose surface has four dimensions you can use four measurements and so on).
-     <p class = "heading">Where can I find out more?</p>
-   <p> There are plenty of places to find out more on the Borsuk-Ulam  Theorem, for instance <a href="https://en.wikipedia.org/wiki/Borsuk%E2%80%93Ulam_theorem" target=”_blank”>Wikipedia</a> or this <a href="https://www.youtube.com/watch?v=z75B8iP1Y3g" target=”_blank”>YouTube video</a>.  A good college-level introduction to the subject is <a href="https://www.goodreads.com/book/show/423247.Using_the_Borsuk_Ulam_Theorem"  target=”_blank”>Using the Borsuk-Ulam Theorem </a>.  And if you want to know about the excitement of being a mathematician we recommend Stanisław Ulam's Book "<a href="https://www.goodreads.com/en/book/show/423246" target=”_blank”>Adventures of a Mathematician</a>" (which is also a <a href="https://www.imdb.com/title/tt6875374/" target="_blank">movie</a>).
-   <p class = "heading"> Where does the temperature and air pressure data come from?</p>
-   <p>We use the most recent publically available <a href="https://www.ecmwf.int/">ECMWF</a> forecast for the present time.   We then apply a simple interpolation to extend this data in a continuous way to give a precise estimate of the temperature and air pressure everywhere on the map.  This page is not intended to provide weather information and is for education purposes only.  
-   
+<p> The mathematics behind the Borsuk-Ulam Theorem is more advanced, was developed in the 1930s, and is attributed to Karol Borsuk and Stanisław Ulam.  It is part of the field of algebraic topology and is taught in college-level mathematics.
+<p class = "heading">Does this only work for temperature and air pressure?</p>
+<p> Not at all! It also works for any other pairs of measurements, for example you could use temperature and humidity instead.    What is needed is that the measurements are "continuous" which means that if you move on the surface of the earth just a little bit then the measurement also changes by just a little bit.
+<p class = "heading">Can you do this for three or more measurements?</p>
+<p> You can only use two measurements on the surface of the earth, because the surface is two dimensional.  But mathematically speaking, you can consider a planet in four dimensional space whose surface will have three dimensions, and then there is a version of the Borsuk-Ulam Theorem that works for any three continuous measurements (similarly on a planet whose surface has four dimensions you can use four measurements and so on).
+<p class = "heading">Where can I find out more?</p>
+<p> There are plenty of places to find out more on the Borsuk-Ulam  Theorem, for instance <a href="https://en.wikipedia.org/wiki/Borsuk%E2%80%93Ulam_theorem" target=”_blank”>Wikipedia</a> or this <a href="https://www.youtube.com/watch?v=z75B8iP1Y3g" target=”_blank”>YouTube video</a>.  A good college-level introduction to the subject is <a href="https://www.goodreads.com/book/show/423247.Using_the_Borsuk_Ulam_Theorem"  target=”_blank”>Using the Borsuk-Ulam Theorem </a>.  And if you want to know about the excitement of being a mathematician we recommend Stanisław Ulam's Book "<a href="https://www.goodreads.com/en/book/show/423246" target=”_blank”>Adventures of a Mathematician</a>" (which is also a <a href="https://www.imdb.com/title/tt6875374/" target="_blank">movie</a>).
+<p class = "heading"> Where does the temperature and air pressure data come from?</p>
+<p>We use the most recent publically available <a href="https://www.ecmwf.int/">ECMWF</a> forecast for the present time.   We then apply a simple interpolation to extend this data in a continuous way to give a precise estimate of the temperature and air pressure everywhere on the map.  This page is not intended to provide weather information and is for education purposes only.  
 <p>The maps update themselves automatically (usually every minute), at which point you may see the markers move since the temperature and pressure will have changed.
+<p class = "heading"> Who made this? </p>
+<p> <a href="https://www.imperial.ac.uk/people/colin.cotter" target="_blank">Colin Cotter</a> (Imperial College, London) and <a href="https://sites.google.com/uic.edu/juliusross/home" target="_blank">Julius Ross</a> (University of Illinois at Chicago, supported by NSF-DMS 1749447).  You can provide feedback, or access the source code <a href="more.html" target=”_blank”>here</a>.  
 
-
-   <p class = "heading"> Who made this? </p>
-   <p> <a href="https://www.imperial.ac.uk/people/colin.cotter" target="_blank">Colin Cotter</a> (Imperial College, London) and <a href="https://sites.google.com/uic.edu/juliusross/home" target="_blank">Julius Ross</a> (University of Illinois at Chicago, supported by NSF-DMS 1749447).  You can provide feedback, or access the source code <a href="more.html" target=”_blank”>here</a>.  
+<!--   <p>If you want to support keeping this page free for all to use, please consider <a href="https://tiptopjar.com/juliusross" target="_blank">tipping</a>. -->
    
-   <p>If you want to support keeping this page free for all to use, please consider <a href="https://tiptopjar.com/juliusross" target="_blank">tipping</a>.
-   
-
-    </div>
+</div>
 </div>
 
-
-<script>
-
-
-
-function toggleFullscreen() {
-  const element = document.documentElement;
-
-  if (!document.fullscreenElement) {
-    if (element.requestFullscreen) {
-      element.requestFullscreen();
-    } else if (element.mozRequestFullScreen) {
-      element.mozRequestFullScreen();
-    } else if (element.webkitRequestFullscreen) {
-      element.webkitRequestFullscreen();
-    } else if (element.msRequestFullscreen) {
-      element.msRequestFullscreen();
-    }
-  } else {
-    if (document.exitFullscreen) {
-      document.exitFullscreen();
-    } else if (document.mozCancelFullScreen) {
-      document.mozCancelFullScreen();
-    } else if (document.webkitExitFullscreen) {
-      document.webkitExitFullscreen();
-    } else if (document.msExitFullscreen) {
-      document.msExitFullscreen();
-    }
-  }
-}
-
-
-
-
-
-var expanded = false
-var map,map2 
-function handleexpand()
-// Handler for the expanding and collapsing of the explaination text
-{ 
-	console.log('expanding')
-	var container = document.getElementById('container');
-	var smallarrow = document.getElementById('smallarrow');
-	 // Add the class to trigger the animation
-	 if (expanded==false) {
-		container.classList.remove('expand-animation');
-		container.classList.remove('collapse-animation');
-		container.classList.add('expand-animation');
-		
-		//Resize maps on animation end
-		function onAnimationEnd() {
-			map.resize()
-			map2.resize()
-    	}
-    	container.addEventListener('animationend', onAnimationEnd);
-		
-		
-		expanded = true
-		smallarrow.classList.remove('right');
-		smallarrow.classList.add('left');
-
-	 	// The following runs map.resize every 10ms for 6 seconds to smooth out the animation
-		counter =0
-
-		const intervalId = setInterval(() => {
-			map.resize()
-			map2.resize()
-			counter++;
-			if (counter >= 6000 / 100) {
-				clearInterval(intervalId); 
-			  }
-			}, 10);
-	
-		}
-	 else
-	 {	
-		container.classList.remove('expand-animation');
-		container.classList.remove('collapse-animation');
-		container.classList.add('collapse-animation');
-		expanded = false
-		//Resize maps on animation end
-		function onAnimationEnd() {
-			map.resize()
-			map2.resize()
-    	}
-    	container.addEventListener('animationend', onAnimationEnd);
-		
-		
-		
-		smallarrow.classList.remove('left');
-		smallarrow.classList.add('right');
-	
-		counter =0
-		// The following runs map.resize every 10ms for 6 seconds to smooth out the animation
-		const intervalId = setInterval(() => {
-			  map.resize()
-			  map2.resize()
-			  counter++;
-			  if (counter >= 6000 / 100) {
-				clearInterval(intervalId); // Stop the interval after 2 seconds
-			  }
-			}, 10);
-		}
-}
-
-
-// Add a click event listener to expand and collapse the explaination text
-//var verticalbar = document.getElementById('verticalbar');
-//verticalbar.addEventListener('click', handleexpand);   
-
-var spinnerdiv = document.getElementById('spinner');  // Used for the spinner that appears when updating the time at which data is being shown
-
-
-//
-// Initialization of various data
-// 
-
-if (debugmode == 1){
-var debugdiv = document.getElementById('debugdiv');  // Used for the spinner that appears when updating the time at which data is being shown
-debugdiv.style.display = 'block';
-}
-
-var spinnerdiv = document.getElementById('spinner');  // Used for the spinner that appears when updating the time at which data is being shown
-spinnerdiv.style.display = 'inline-block';
-
-
-let scriptEle = document.createElement("script");
-scriptEle.setAttribute("src", budirectory+bulatestdatafilename);
-document.body.appendChild(scriptEle);
-
-//
-// Hide arrow when user has finished scrolling
-//
-const scrollableDiv = document.getElementById("blurb");
-var arrow = document.getElementById('arrow');
-var blurb = document.getElementById('blurb');
-scrollableDiv.addEventListener('scroll', function() {
-if ((scrollableDiv.scrollTop+scrollableDiv.offsetHeight)>scrollableDiv.scrollHeight-10)
-	{
-	arrow.style.display = 'none'
-	}
-}
-)
-
-// Mapbox variables
-
-marker1 = new mapboxgl.Marker({color: "#9a9065"})
-marker2 = new mapboxgl.Marker()
-marker3 = new mapboxgl.Marker({color: "#9a9065"})
-marker4 = new mapboxgl.Marker()
-
-
-var latitudeLine = {
-  "type": "FeatureCollection",
-  "features": [
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [-180, 0], // Replace YOUR_LATITUDE with the desired latitude
-          [180, 0]
-        ]
-      }
-    }
-  ]
-};
-
-const popup = new mapboxgl.Popup({
-	className: 'popup',
-	closeButton: false,
-	closeOnClick: false
-  });
-  
-const popup2 = new mapboxgl.Popup({
-	className: 'popup2',
-	closeButton: false,
-	closeOnClick: false
-  });
-
-// Other global variables
-var currenttimestep, currenttimestepindex	// These need to be renamed.  Could we even remove them?
-var automaticupdates = true	// Set to true in normal circumstances so data will update every minute.  
-var  popup_location, popup2_location  // global variables that store the location of the two popups.  I guess with better programming these could be removed
-
-window.onload = function () { mapBoxInit(); }
-
-// 
-// Functions
-// 
-
-function roundToNearestMinute(date) 
-{
-	//
-	// Rounds a date to the nearest minute
-	//
-    var coeff = 1000 * 60 * 1; // <-- Replace {5} with interval
-    return new Date(Math.round(date.getTime() / coeff) * coeff);
-};
-
-function refreshupdatedtime()
-	{
-	//
-	// Updates the html that shows when the data was last updated
-	//
-	  const options = {
-	  dateStyle: 'full',
-	  timeStyle: 'long'
-	};
-	// Take the ds_datetime and add to it the current timestep (in seconds)
-	lastupdateddate = new Date(bu.ds_datetime+'Z')
-	lastupdateddate.setSeconds(lastupdateddate.getSeconds() + currenttimestep)
-	// Then round to the nearest minute
-	lastupdateddate=roundToNearestMinute(lastupdateddate)
-	// Now update the html
-	lastupdateparagraph = document.getElementById('lastupdated');
-	text = Intl.DateTimeFormat(navigator.language,options).format(lastupdateddate)
-	lastupdateparagraph.innerText=text
-	}
-
-function get_antipodal(p)
-	{
-	//
-	// Returns anitpodal point of a point p
-	//
-	var antilat = -p.lat
-	if (p.lng > 0){
-		var antilng = (180 - p.lng)*-1}
-	else 
-	  {var antilng = (-180 - p.lng)*-1	
-	}
-	return {lat: antilat, lng: antilng}	
-	}
-	
-function getclimatevariables(p)
-	{	
-	// 
-	// Gets the temperature and pressure at a point p
-	// Assumes the correct currenttimestep for the time
-	// Also returns a textlabel in html to use in the popup
-	// Note this is hardcoded for a grid size of 0.4
-	//
-	lat = p.lat
-	lng = p.lng
-
-
-
-	//
-	// Adjust the lat and long to reflect the lat/lng grid structure
-	//
-	var x = (-lat+90)%180    
-	var y =(lng+180)%360	
-	if (y<0){ y=y+360}
-	if (x<0){x=x+180}
-
-
-	// get the ll grid coordinate (i,j) wrapping correctly
-	var i = Math.floor(y/0.4)
-	if (i==900){ i=0 } 
-
-	var j = Math.floor(x/0.4)
-	if (j==450){ j=0}  
-
-	// get the ur grid coordinate (ip,jp) wrapping correctly
-	var ip = i+1
-	var jp = j+1	
-	if (ip==900){ ip=0 } 
-	if (jp==450){ jp=0 } 
-
-
-
-	// get the distance to the grid coordinate
-	var a = x/0.4-j
-	var b = y/0.4-i
-
-
-	// temperature and pressure
-	//var t = bu.t_initial
-	//var p = bu.p_initial
-
-
-
-	// decide on the number of decimal places to round to
-	zoom = map.getZoom();
-
-	var temp_decimals
-	var pressure_decimals
-	var coordinate_decimals
-	if (zoom<2)
-		{temp_decimals=1;pressure_decimals=2;coordinate_decimals=1 }
-	else if (zoom<3)
-		{temp_decimals=2;pressure_decimals=2;coordinate_decimals=2 }
-	else if (zoom<4)
-		{temp_decimals=3;pressure_decimals=3;coordinate_decimals=3}
-	else if (zoom<5)
-		{temp_decimals=3; pressure_decimals=3;coordinate_decimals=4 }
-	else
-		{temp_decimals=3; pressure_decimals=3;coordinate_decimals=5 }
-
-
-	var temp_initial,temp_final
-	var t = bu.t_initial
-	var p = bu.p_initial
-	// calculate the temperature at initial time in data source
-	var temp_initial = (1-b)*((1-a)*t[j][i] + a*t[jp][i])  + b*((1-a)*t[j][ip] + a*t[jp][ip])
-	var pressure_initial = (1-b)*((1-a)*p[j][i] + a*p[jp][i])  + b*((1-a)*p[j][ip] + a*p[jp][ip])
-
-	var pressure_initial,pressure_final
-	t = bu.t_final
-	p = bu.p_final
-	// calculate the pressure at final time in data source
-	var temp_final = (1-b)*((1-a)*t[j][i] + a*t[jp][i])  + b*((1-a)*t[j][ip] + a*t[jp][ip])
-	var pressure_final = (1-b)*((1-a)*p[j][i] + a*p[jp][i])  + b*((1-a)*p[j][ip] + a*p[jp][ip])
-
-	// interpolate the temperature and pressure at the right time between the initial and final times
-	var temp,pressure
-	var delta = (currenttimestep-bu.initial_timestep)/(bu.final_timestep-bu.initial_timestep)
-	temp = delta * temp_final + (1- delta)* temp_initial
-	pressure = delta * pressure_final + (1- delta)* pressure_initial
-
-
-	// convert to desired units
-	temp=temp-273.15 // convert to centigrade			
-	pressure = pressure/1000
-
-	// get the textlabel to display as html	
-	popuplabel =  'temperature: ' + String(temp.toFixed(temp_decimals))+'\u{00B0}C<br> pressure: ' + String(pressure.toFixed(pressure_decimals)) +'kPa'
-	popuplabel =  popuplabel +'<br>'+'latitude: ' + String(lat.toFixed(coordinate_decimals)) + '\u{00B0}'+'<br>'+ 'longitude: ' +String(lng.toFixed(coordinate_decimals))+'\u{00B0}'
-
-	return {temp: temp.toFixed(temp_decimals), pressure: pressure.toFixed(pressure_decimals),popuplabel: popuplabel}
-	
-	}  
-
-
-function manuallyupdatetime()
-	{
-	//
-	// Function that allows manual adjustement of the time
-	// Used for testing purposes only
-	//
-	console.log('updating timestep manually')
-	manualdate = document.getElementById('myText').value
-	manualdate = Date.parse(manualdate)
-	newindex = calculatetimestep(manualdate)
-	if (newindex!=currenttimestepindex)
-	{
-	console.log('found new timestep when updating manually')
-	currenttimestepindex = newindex
-	currenttimestep = bu.ulamlist[currenttimestepindex][0]
-	updatetimestep()
-	}
-	
-}
-
-function updatetime()
-	{
-	//
-	// Function that is run periodically to use the most recent time data available
-	//
-	if(automaticupdates==true){
-		now = new Date()
-		now = Date.parse(now)
-		newindex = calculatetimestep(now)
-		if (newindex!=currenttimestepindex)
-		{
-		currenttimestepindex = newindex
-		currenttimestep = bu.ulamlist[currenttimestepindex][0]
-		updatetimestep()
-	}
-	}
-	
-}
-
-function fallback(){
-	console.log('falling back to older data; this should not happen; is the system clock wrong?')
-	automaticupdates = false
-	
-	let scriptEle2 = document.createElement("script");
-	scriptEle2.setAttribute("src",fallbackbufile);
-	document.head.appendChild(scriptEle2);
-	newindex =0
-	console.log('newindex',newindex)
-}
-
-function calculatetimestep(now)
-	{
-	//
-	// Work out the best timestep to use from the data we have available based on time now
-	// If there are none then it falls back to older stored data, and stops automatic time updates
-	//
-	
-	ds_date = new Date(bu.ds_datetime+'Z')
-	difference = (now - ds_date)/1000 // measured in seconds
-	
-	filtered_ulamlist = ulamlist.filter((u)=>
-	{
-	return u[0]<=difference
-	}
-	)
-
-
-	if (filtered_ulamlist.length==0)
-		{
-		// load fall back file and take the earliest time in that file.  This has not been tested
-		console.log('cannot find any relevant times in the bufile; falling back')
-		fallback()
-		}
-	else
-		newindex = filtered_ulamlist.length-1
-			
-	return newindex	
-}
-		
-function updatetimestep()
-	{ 
-	//
-	// Show the spinner div, update markers and popuplabels.  Usually called when time is updated
-	//
-  	spinnerdiv.style.display = 'inline-block';
-  	
-  	setTimeout(movemarkers, 2000);
-	
-	function movemarkers(){
-		var counter=0
-		var timestep=20
-		var startLngLat,endLngLat
-
-		function animateMarker() {
-			/* 
-			Update the data to a new position 
-			based on the animation timestamp. 
-			The divisor in the expression `timestamp / 1000` 
-			controls the animation speed.
-			*/
-			a = counter/timestep
-			b = 1-a
-			marker1.setLngLat([a*ulam1.lng+b*startLngLatA.lng, a*ulam1.lat+b*startLngLatA.lat]);
-			marker3.setLngLat([a*ulam1.lng+b*startLngLatA.lng, a*ulam1.lat+b*startLngLatA.lat]);
-		
-			marker2.setLngLat([a*ulam2.lng+b*startLngLatB.lng, a*ulam2.lat+b*startLngLatB.lat]);
-			marker4.setLngLat([a*ulam2.lng+b*startLngLatB.lng, a*ulam2.lat+b*startLngLatB.lat]);
-			counter = counter +1
-			// Request the next frame of the animation.
-			if (counter<timestep+1)
-				{requestAnimationFrame(animateMarker);}
-			}
- 
-
-	
-		 ulam1  = new mapboxgl.LngLat(bu.ulamlist[currenttimestepindex][1][1],bu.ulamlist[currenttimestepindex][1][0])
-		 ulam2  = get_antipodal(ulam1)
-		 startLngLatA = marker1.getLngLat()
-		 startLngLatB = marker2.getLngLat()
- 
-		 requestAnimationFrame(animateMarker)
-		 updatepopuptexts()
-		 
-		refreshupdatedtime()
-  		spinnerdiv.style.display = "none";
-		} 
-    }
-    
-function updatepopuptexts()
-	{
-	// 
-	// Update the text in the two popups based on their location on the map
-	//
-	
-	var popup_climate = getclimatevariables(popup_location)
-	var popup2_climate = getclimatevariables(popup2_location)
-
-	popup.setHTML(popup_climate.popuplabel);
-	popup2.setHTML(popup2_climate.popuplabel);
-
-
-	//Highlight all popups if cursor is over ulam point
-	const elements = document.querySelectorAll('.mapboxgl-popup-content');
-	if ((popup_climate.temp  == popup2_climate.temp) && (popup_climate.pressure == popup2_climate.pressure))
-	{
-	elements.forEach((element)=>element.classList.remove("highlight_pressure"));
-	elements.forEach((element)=>element.classList.remove("highlight_temp"));
-	elements.forEach((element)=>element.classList.add("highlight"));
-	}
-	else if ((popup_climate.temp  == popup2_climate.temp))
-	{
-		elements.forEach((element)=>element.classList.remove("highlight"));
-	elements.forEach((element)=>element.classList.remove("highlight_pressure"));
-	elements.forEach((element)=>element.classList.add("highlight_temp"));
-	}
-	else if ((popup_climate.pressure  == popup2_climate.pressure))
-	{
-	elements.forEach((element)=>element.classList.remove("highlight"));
-	elements.forEach((element)=>element.classList.remove("highlight_temp"));
-	elements.forEach((element)=>element.classList.add("highlight_pressure"));
-	}
-	else
-	{
-	elements.forEach((element)=>element.classList.remove("highlight"));
-	elements.forEach((element)=>element.classList.remove("highlight_pressure"));
-	elements.forEach((element)=>element.classList.remove("highlight_temp"));
-	}
-		
-	}
-	   
-function mapBoxInit() 
-	{    
-	//
-	// Initialization of the maps; run once when window is opened
-	//
-	
-	
-	// Show the spinner for 2 seconds.  Not really needed but I think good UI as it may appear later
-	spinnerdiv.style.display = 'inline-block';
-	
-
-	
-	
-	setTimeout( ()=> {spinnerdiv.style.display = 'none';} , 500);
-
-	if (typeof mapboxaccesstoken === typeof undefined)
-	{
-	console.log('loading disable message')
-	var disableddiv = document.getElementById('disabledmessage');
-	disableddiv.style.visibility = 'visible'
-	}
-  
-	// mapbox access token
-	mapboxgl.accessToken = mapboxaccesstoken;
-
-	
-	
-	// define the first map
-	if (debug_skipmaps ==0)
-	{
-		map = new mapboxgl.Map({
-		container: 'map',
-		maxZoom: 12, 
-		minZoom: 1,
-		zoom: 0,
-		center: [260, 30],
-		style: 'mapbox://styles/juliusross/clp16b25v00vm01pe2pzgbebz',
-		projection: 'globe',
-		attributionControl: false
-		});
-  
-		// define the second map
-		map2 = new mapboxgl.Map({
-		container: 'map2',
-		maxZoom: 12, 
-		minZoom: 1,
-		zoom: 0,
-		center: [80, -30],
-		style: 'mapbox://styles/juliusross/clp16b25v00vm01pe2pzgbebz',
-		projection: 'globe',
-		hash: false,
-		attributionControl: false
-		});
-	}
-
-
-	
-	const language = new MapboxLanguage();
-	map.addControl(language);
-	const language2 = new MapboxLanguage();
-	map2.addControl(language2);
-
-   
-	// these two variables are being used to keep track of the popup locations
-	// they should not really be used in this way but it is fine for now
-	popup_location= {'lat': 50, 'lng':-80}
-	popup2_location = get_antipodal(popup_location)
-	
-	
-	// initialize the correct timestep to use from the data we have
-	ulamlist = bu.ulamlist
-	currenttimestepindex = calculatetimestep(new Date())
-	currenttimestep = bu.ulamlist[currenttimestepindex][0]
-	refreshupdatedtime()
-
-	// set timer to run every minute to update the timestep as needed
-	setInterval(updatetime, 60*1000);
-
-	// calculate the ulam points for the first time
-	ulam1  = new mapboxgl.LngLat(bu.ulamlist[currenttimestepindex][1][1],bu.ulamlist[currenttimestepindex][1][0])
-	ulam2  = get_antipodal(ulam1)
-
-	 map.on('load', () => {
-	 // Once map is loaded add the markers and the popup
-	 
-	 // Add the equator
-	 	map.addSource('latitude-line', {
-  'type': 'geojson',
-  'data': latitudeLine
-});
-	
-	map.addLayer({
-  'id': 'latitude-line',
-  'type': 'line',
-  'source': 'latitude-line',
-  'layout': {
-    'line-join': 'round',
-    'line-cap': 'round'
-  },
-  'paint': {
-    'line-color': 'black', // Change the color as desired
-    'line-width': 0.25,
-    'line-dasharray': [1, 4],
-  }
-});
-	 
-	 marker1.setLngLat(ulam1).addTo(map);	
-	 marker2.setLngLat(ulam2).addTo(map);
-	 spinnerdiv.style.display = 'none';
-	 popup.setLngLat([popup_location.lng,popup_location.lat]).addTo(map);
-	 updatepopuptexts()
-	 })
-   
-	map2.on('load', () => {
-	// Once map2 is loaded add the markers and the popup
-	
-	 // Add the equator
-	 	map2.addSource('latitude-line', {
-  'type': 'geojson',
-  'data': latitudeLine
-});
-	
-	map2.addLayer({
-  'id': 'latitude-line',
-  'type': 'line',
-  'source': 'latitude-line',
-  'layout': {
-    'line-join': 'round',
-    'line-cap': 'round'
-  },
-  'paint': {
-    'line-color': 'black', // Change the color as desired
-    'line-width': 0.25,
-    'line-dasharray': [1, 4],
-  }
-});
-
-
-	 marker3.setLngLat(ulam1).addTo(map2);	
-	 marker4.setLngLat(ulam2).addTo(map2);	  
-	 spinnerdiv.style.display = 'none';   		
-	 popup2.setLngLat([popup2_location.lng,popup2_location.lat]).addTo(map2);
-	 updatepopuptexts()
-	})
-  
-	// Add zoom and rotation controls to the maps.
-	map.addControl(new mapboxgl.NavigationControl({showCompass: false}),'top-left');
-	//map2.addControl(new mapboxgl.NavigationControl({showCompass: false}),'top-left');
-
-	map.addControl(new mapboxgl.AttributionControl(), 'top-right');
-	// coordination between the two maps and updating of the text of the popups
-	var disable = false;
-	map.on("move", function () {
-	if (!disable) {
-	  var center = map.getCenter();
-	  var zoom = map.getZoom();
-	  var pitch = map.getPitch();
-	  var bearing = map.getBearing();
-
-	  disable = true;
-	  var antipodal = get_antipodal(center)
-
-	  map2.setCenter(antipodal); 
-	  map2.setPitch(pitch);
-	  map2.setZoom(zoom);
-	  map2.setBearing(bearing);
-	  disable = false;
-	  updatepopuptexts()
-	}
-	})
-
-	// coordination between the two maps and updating of the text in the popups
-
-	map2.on("move", function () {
-	if (!disable) {
-	  var center = map2.getCenter();
-	  var zoom = map2.getZoom();
-	  var pitch = map2.getPitch();
-	  var bearing = map2.getBearing();
-
-	  disable = true;
-
-	  var antipodal = get_antipodal(center)
-	  map.setCenter(antipodal); 
-	  map.setZoom(zoom);
-	  map.setPitch(pitch);
-	  map.setBearing(bearing);
-	  disable = false;
-	  updatepopuptexts()
-	}
-	})
-  
-  
-  
-	// Show the popup when the cursor moves over each of the mapx
-	map.on('mousemove', (e) => {
-		popup_location=e.lngLat; 		  	
-		popup2_location=get_antipodal(e.lngLat);
-		popup.setLngLat(popup_location)
-		popup2.setLngLat(popup2_location)
-		updatepopuptexts()	
-		});
-		
-		map.on('touchstart', (e) => {
-		popup_location=e.lngLat; 		  	
-		popup2_location=get_antipodal(e.lngLat);
-		popup.setLngLat(popup_location)
-		popup2.setLngLat(popup2_location)
-		updatepopuptexts()	
-		});
-
-
-	map2.on('mousemove', (e) => {	
-		popup2_location=e.lngLat; 		  	
-		popup_location=get_antipodal(popup2_location);
-		popup.setLngLat(popup_location)
-		popup2.setLngLat(popup2_location)
-		updatepopuptexts()	
-		});
-
-
-	map2.on('touchstart', (e) => {	
-		popup2_location=e.lngLat; 		  	
-		popup_location=get_antipodal(popup2_location);
-		popup.setLngLat(popup_location)
-		popup2.setLngLat(popup2_location)
-		updatepopuptexts()	
-		});
-
-}
-    
-
-</script>
-
+<script src="mapbox.js"></script>
 </body>
-
 </html>
