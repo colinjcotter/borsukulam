@@ -180,7 +180,7 @@ if (args.s3dryrun==0):
 	# Copy the smaller javascript file to S3 bucket (full url)
 	s3websitedirectory_fullurl = "s3://bursk-ulam-pointer/"
 	logger.info('Writing bu_datafile full url '+str(bu_datafile_url)+' to S3 bucket '+str(s3websitedirectory_fullurl))
-	subprocessoutput=subprocess.run(["aws s3 cp "+bu_datafile+' '+s3websitedirectory_fullurl+'bu-latest-data-pointer.js'], shell=True)
+	subprocessoutput=subprocess.run(["aws s3 cp "+bu_datafile_url+' '+s3websitedirectory_fullurl+'bu-latest-data-pointer.js'], shell=True)
 	logger.info(subprocessoutput)
 
 	# Compress the data file
