@@ -150,6 +150,7 @@ f.write('var bu=' + json.dumps(bu_ulampoints)+'\n')
 f.close
 
 s3bufilesdirectory = "s3://bursk-ulam-bufiles/"
+s3bufilesdirectory_url = "https://bursk-ulam-bufiles.s3.us-east-2.amazonaws.com/"
 
 #
 # Create a smaller javascript file that points to the larger bu data file 
@@ -165,7 +166,7 @@ with open(bu_datafile, 'w') as file:
 
 bu_datafile_url = bu_local_directory+'bu-latest-data-url.js'
 with open(bu_datafile_url, 'w') as file:
-	file.write('var bulatestdataurl="'+s3bufilesdirectory+bu_filename+'.gz"')
+	file.write('var bulatestdataurl="'+s3bufilesdirectory_url+bu_filename+'.gz"')
 	
 #
 # Move the files to the S3 buckets
