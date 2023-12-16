@@ -156,7 +156,15 @@ f.close
 bu_datafile = bu_local_directory+'bu-latest-data.js'
 with open(bu_datafile, 'w') as file:
 	file.write('var bulatestdatafilename="'+bu_filename+'.gz"')
+	
+#
+# Create a smaller javascript file that points to the larger bu data file (full url)
+#
 
+bu_datafile_url = bu_local_directory+'bu-latest-data-url.js'
+with open(bu_datafile_url, 'w') as file:
+	file.write('var bulatestdataurl="'+s3bufilesdirectory+'/'+bu_filename+'.gz"')
+	
 #
 # Move the files to the S3 buckets
 #
@@ -165,6 +173,12 @@ if (args.s3dryrun==0):
 	s3websitedirectory = "s3://julius-ross.com/Borsuk-Ulam/"
 	logger.info('Writing bu_datafile '+str(bu_datafile)+' to S3 bucket '+str(s3websitedirectory))
 	subprocessoutput=subprocess.run(["aws s3 cp "+bu_datafile+' '+s3websitedirectory+'bu-latest-data.js'], shell=True)
+	logger.info(subprocessoutput)
+	
+	# Copy the smaller javascript file to S3 bucket (full url)
+	s3websitedirectory_fullurl = "s3://julius-ross.com/Borsuk-Ulam/" #Lets create a new bucket here from the get go
+	logger.info('Writing bu_datafile full url '+str(bu_datafile_url)+' to S3 bucket '+str(s3websitedirectory_fullurl))
+	subprocessoutput=subprocess.run(["aws s3 cp "+bu_datafile+' '+s3websitedirectory_fullurl+'bu-latest-data-pointer.js'], shell=True)
 	logger.info(subprocessoutput)
 
 	s3bufilesdirectory = "s3://bursk-ulam-bufiles/"
