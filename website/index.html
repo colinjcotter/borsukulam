@@ -15,6 +15,7 @@
 <script src="config.js"></script>
 <script src="utils.js"></script>
 <script src="web_utils.js"></script>
+<script src="SimpleHTMLLocalizer/localization.js"></script>
 
 
 <!-- Mapbox files -->
@@ -33,7 +34,7 @@
 <div id="disabledmessage" class="disabled"> Page down, likely due to high demand.  Please come back another time </div>
 
 <!-- Div for the Last updated text -->
-<div id="timed" class="timer">Last updated: <span id="lastupdated">(loading)</span></div>
+<div id="timed" class="timer"><localized-text key="last_updated"></localized-text>: <span id="lastupdated">(loading)</span></div>
 
 <!-- Div for the spinner -->
 <div class="lds-spinner" id="spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
@@ -68,6 +69,8 @@ border="0" alt="HTML Hit Counters"></a>
   
 <h1>The Borsuk-Ulam Explorer<br><span class="authors">by Colin Cotter and Julius Ross</span></h1>
 <p class = "heading">What is this?</p>
+
+
 <p>The two maps on the left display opposite sides of the earth, and the orange and green labels show the current temperature and air pressure at locations directly opposite each other.
 <p>You probably would not expect it, but there are pairs of locations directly opposite each other with exactly the same temperature.  Drag the maps to move them, and see if you can find any for yourself (if you get stuck, try moving the labels slowly around the equator which is shown by a thin black line).
 
