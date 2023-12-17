@@ -180,14 +180,15 @@ function mapBoxInit()
 		});
 	}
 	
-		const v1 = new mapboxgl.LngLatBounds(
+	
+	const v1 = new mapboxgl.LngLatBounds(
 	new mapboxgl.LngLat(0, 0),
 	new mapboxgl.LngLat(180, 0),
 	new mapboxgl.LngLat(90, 0),
 	new mapboxgl.LngLat(270, 0),    
 	);
-	map.fitBounds(v1, {maxZoom: 0.8})
-	map2.fitBounds(v1, {maxZoom: 0.8})
+	
+
 	 	
 	//
 	// Add localization of the maps
@@ -203,7 +204,7 @@ function mapBoxInit()
 	// they should not really be used in this way but it is fine for now
 	//
 	
-	popup_location= {'lat': 50, 'lng':-80}
+	popup_location= {'lat': 50, 'lng':100}
 	popup2_location = get_antipodal(popup_location)
 	
 	//
@@ -225,10 +226,32 @@ function mapBoxInit()
 	
 	ulam1  = new mapboxgl.LngLat(bu.ulamlist[currenttimestepindex][1][1],bu.ulamlist[currenttimestepindex][1][0])
 	ulam2  = get_antipodal(ulam1)
+	
+	initialanimation = true
 
+		 
 	 map.on('load', () => {
+	 
+	 	// Show popups on mousemove or touchstart events 
+	 
+	 	map.on('mousemove', (e) => {
+		popup_location=e.lngLat; 		  	
+		popup2_location=get_antipodal(e.lngLat);
+		popup.setLngLat(popup_location)
+		popup2.setLngLat(popup2_location)
+		updatepopuptexts()	
+		});
+		
+		map.on('touchstart', (e) => {
+		popup_location=e.lngLat; 		  	
+		popup2_location=get_antipodal(e.lngLat);
+		popup.setLngLat(popup_location)
+		popup2.setLngLat(popup2_location)
+		updatepopuptexts()	
+		});
 
-	 	
+
+
 	 	// Add equator line	
 		 map.addSource('latitude-line', {
 		  'type': 'geojson',
@@ -250,7 +273,6 @@ function mapBoxInit()
 		  }
 		});
 	 	
-	 	
 
 
 	
@@ -265,9 +287,36 @@ function mapBoxInit()
 		 spinnerdiv.style.display = 'none';
 		 })
    
+   map.on('zoomend', () => {
+	   popup.setLngLat([popup_location.lng,popup_location.lat]).addTo(map);
+	   updatepopuptexts()
+   	   initialanimation = false
+   });
+   
    	// Now do exactly the same for map2
 	map2.on('load', () => {
 	
+	// Show popups on mousemove or touchstart events 
+
+	map2.on('mousemove', (e) => {	
+		popup2_location=e.lngLat; 		  	
+		popup_location=get_antipodal(popup2_location);
+		popup.setLngLat(popup_location)
+		popup2.setLngLat(popup2_location)
+		updatepopuptexts()	
+		});
+
+
+	map2.on('touchstart', (e) => {	
+		popup2_location=e.lngLat; 		  	
+		popup_location=get_antipodal(popup2_location);
+		popup.setLngLat(popup_location)
+		popup2.setLngLat(popup2_location)
+		updatepopuptexts()	
+		});
+	
+		//map2.fitBounds(v1, {maxZoom: 0.8})
+	  map.fitBounds(v1, {maxZoom: 0.8}) 
 	
 	 // Add the equator
 		map2.addSource('latitude-line', {
@@ -298,29 +347,20 @@ function mapBoxInit()
 	 marker3.setLngLat(ulam1).addTo(map2);	
 	 marker4.setLngLat(ulam2).addTo(map2);	  
 	 spinnerdiv.style.display = 'none';   		
-	 
+
+
+	
+	
 	 // Update the popups
 	 popup2.setLngLat([popup2_location.lng,popup2_location.lat]).addTo(map2);
 	 updatepopuptexts()
+	 
+
+	
 	})
 
 	// Add zoom and rotation controls to the maps.
 	map.addControl(new mapboxgl.NavigationControl({showCompass: false}),'top-left');
-
-// map.addControl(new MapboxInspect({
-//     
-//    showInspectButton: true,
-// showMapPopup: true,
-//   backgroundColor: '#000',
-//       renderPopup: function(features) {
-//           console.log(JSON.stringify(features), undefined, 2);
-//             console.log(features);
-//     //return '<h1> test 1:'+features[0].properties.Name + '</h1>';
-//           return '<pre>'+JSON.stringify(features[0].properties, undefined, 2) + '</pre>';
-//   }
-//   }
-// ));
-
 
 
 	//
@@ -435,43 +475,7 @@ function mapBoxInit()
 	})
   
   
-  	//
-	// Show the popups when the cursor moves over each of the maps
-	//
-	
-	map.on('mousemove', (e) => {
-		popup_location=e.lngLat; 		  	
-		popup2_location=get_antipodal(e.lngLat);
-		popup.setLngLat(popup_location)
-		popup2.setLngLat(popup2_location)
-		updatepopuptexts()	
-		});
-		
-		map.on('touchstart', (e) => {
-		popup_location=e.lngLat; 		  	
-		popup2_location=get_antipodal(e.lngLat);
-		popup.setLngLat(popup_location)
-		popup2.setLngLat(popup2_location)
-		updatepopuptexts()	
-		});
 
-
-	map2.on('mousemove', (e) => {	
-		popup2_location=e.lngLat; 		  	
-		popup_location=get_antipodal(popup2_location);
-		popup.setLngLat(popup_location)
-		popup2.setLngLat(popup2_location)
-		updatepopuptexts()	
-		});
-
-
-	map2.on('touchstart', (e) => {	
-		popup2_location=e.lngLat; 		  	
-		popup_location=get_antipodal(popup2_location);
-		popup.setLngLat(popup_location)
-		popup2.setLngLat(popup2_location)
-		updatepopuptexts()	
-		});
 
 }
     
