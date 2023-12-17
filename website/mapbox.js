@@ -32,7 +32,7 @@ scriptEle0.setAttribute("src", bu_latest_pointer);
 
 scriptEle0.onload = function () {
 let scriptEle = document.createElement("script");
-scriptEle.setAttribute("src", budirectory+bulatestdatafilename);  // When we change the ecmwf we will remove budirectory and just use bulatesturl
+scriptEle.setAttribute("src", bulatestdataurl);  
 document.body.appendChild(scriptEle);
 };
 
