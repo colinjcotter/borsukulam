@@ -166,7 +166,7 @@ f.close
 # Create a smaller javascript file that points to the larger bu data file
 #
 
-bu_datafile_url = bu_local_directory+'bu-latest-data-url.js'
+bu_datafile_url = bu_local_directory+'bu-latest-data-pointer.js'
 with open(bu_datafile_url, 'w') as file:
 	file.write('var bulatestdataurl="'+args.bufile_url+bu_filename+'.gz"')
 	
