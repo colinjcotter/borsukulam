@@ -187,12 +187,12 @@ if (args.s3dryrun==0):
 	
 	# Copy the gzipped javascript data file to bu datafiles S3 bucket
 	logger.info('Copying zipped bu file '+str(bu_local_filename)+' to S3 bucket '+str(args.bufile_s3bucket))
-	subprocessoutput=subprocess.run(["aws s3 cp "+bu_local_filename+'.gz'+' '+args.bufile_s3bucket+' --content-encoding gzip'], shell=True)
+	subprocessoutput=subprocess.run(["aws s3 cp "+bu_local_filename+'.gz'+' '+args.bufile_s3bucket+'/'+bu_filename+'.gz' --content-encoding gzip'], shell=True)
 	logger.info(subprocessoutput)
 	
 	# Copy the ulampoints file to the bu datafiles S3 bucket
 	logger.info('Copying bu-ulampoints file '+str(bu_ulampoints_local_filename)+' to S3 bucket '+str(args.bufile_s3bucket))
-	subprocessoutput=subprocess.run(["aws s3 cp "+bu_ulampoints_local_filename+' '+args.bufile_s3bucket], shell=True)
+	subprocessoutput=subprocess.run(["aws s3 cp "+bu_ulampoints_local_filename+' '+args.bufile_s3bucket+'/'+bu_ulampoints_filename], shell=True)
 	logger.info(subprocessoutput)
 
 logger.info('ECMWF script finished')
