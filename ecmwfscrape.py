@@ -174,7 +174,6 @@ with open(bu_datafile_url, 'w') as file:
 # Move the files to the S3 buckets
 #
 if (args.s3dryrun==0):
-	
 	# Copy the bu pointer file to S3 bucket
 	logger.info('Writing bu_datafile full url '+str(bu_datafile_url)+' to S3 bucket '+str(args.bupointer_s3bucket))
 	subprocessoutput=subprocess.run(["aws s3 cp "+bu_datafile_url+' '+args.bupointer_s3bucket+'bu-latest-data-pointer.js'], shell=True)
@@ -187,7 +186,7 @@ if (args.s3dryrun==0):
 	
 	# Copy the gzipped javascript data file to bu datafiles S3 bucket
 	logger.info('Copying zipped bu file '+str(bu_local_filename)+' to S3 bucket '+str(args.bufile_s3bucket))
-	subprocessoutput=subprocess.run(["aws s3 cp "+bu_local_filename+'.gz'+' '+args.bufile_s3bucket+'/'+bu_filename+'.gz' --content-encoding gzip'], shell=True)
+	subprocessoutput=subprocess.run(["aws s3 cp "+bu_local_filename+'.gz'+' '+args.bufile_s3bucket+'/'+bu_filename+'.gz --content-encoding gzip'], shell=True)
 	logger.info(subprocessoutput)
 	
 	# Copy the ulampoints file to the bu datafiles S3 bucket
