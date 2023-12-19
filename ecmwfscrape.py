@@ -163,14 +163,6 @@ f.close
 
 
 #
-# Create a smaller javascript file that points to the larger bu data file (to be deprecated)
-#
-
-bu_datafile = bu_local_directory+'bu-latest-data.js'
-with open(bu_datafile, 'w') as file:
-	file.write('var bulatestdatafilename="'+bu_filename+'.gz"')
-	
-#
 # Create a smaller javascript file that points to the larger bu data file
 #
 
@@ -182,11 +174,6 @@ with open(bu_datafile_url, 'w') as file:
 # Move the files to the S3 buckets
 #
 if (args.s3dryrun==0):
-	# Copy the old bu pointer file to S3 bucket (hardcoded to be deprecated)
-	s3websitedirectory = "s3://julius-ross.com/Borsuk-Ulam/"
-	logger.info('Writing bu_datafile '+str(bu_datafile)+' to S3 bucket '+str(s3websitedirectory))
-	subprocessoutput=subprocess.run(["aws s3 cp "+bu_datafile+' '+s3websitedirectory+'bu-latest-data.js'], shell=True)
-	logger.info(subprocessoutput)
 	
 	# Copy the bu pointer file to S3 bucket
 	logger.info('Writing bu_datafile full url '+str(bu_datafile_url)+' to S3 bucket '+str(args.bupointer_s3bucket))
