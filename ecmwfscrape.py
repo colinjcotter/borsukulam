@@ -56,9 +56,8 @@ p.add('--bufile_url',type=str,help='Url corresponding to --bufile_s3bucket')
 p.add('--bupointer_s3bucket',type=str,help='S3 bucket that the pointer file will be copied to')
 
 p.add('--logfile',type=str, default = 'ecmwfscrape.log',help='logfile to use')
-p.add('--s3dryrun',type=int, default=0, help='if nonzero then do not copy files to s3 buckets (for testing only)') #improve the notation of this one
-p.add('--scrapedryrun', type=int, default=0, help='if nonzero then do not download from ECMWF but assume data.grib2 is already there (for testing only)') #to be removed
-p.add('--verbose',type=int, default=0,help='if non zero then verbose logging about the numerical method')
+p.add('--s3dryrun',type=int, default=0, help='if nonzero then do not copy files to s3 buckets (for testing only)') 
+p.add('--verbose',type=int, default=0)
 args= p.parse_args()
 
 #
@@ -85,7 +84,7 @@ steps=[numpy.timedelta64(firststep,'h'), numpy.timedelta64(laststep,'h')]
 logger.info("ECMWFscrape starting...")
 
 #This must be a wrong way to test if this field is blank
-if (args.grib2 !=''): 
+if (args.grib2 ==None): 
 	logger.info('Scraping data from ECMWF')
 	client = Client()
 	result  = client.retrieve(
