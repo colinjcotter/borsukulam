@@ -52,7 +52,7 @@ p.add('--time', type=int, help='time of the ecmwf scrape (ignored if --grib2 is 
 p.add('--N', type=int,default=720,help='Number of ulampoints to compute (default 720 which is 1 per minute for 12 hours')
 p.add('--tolerance',type=float,default = 1e-10,help='Tolerance for the ulam points (all that do not meet this are rejected)') 
 
-p.add('--bu-local-directory',default = "", type=str,help='local directory to store bu data files produced from this script')
+p.add('--bu_local_directory',default = "", type=str,help='local directory to store bu data files produced from this script')
 p.add('--bufile_s3bucket',type=str,help='S3 bucket that bufile will be copied to')
 p.add('--bufile_url',type=str,help='Url corresponding to --bufile_s3bucket')
 p.add('--bupointer_s3bucket',type=str,help='S3 bucket that the pointer file will be copied to')
