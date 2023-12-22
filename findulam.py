@@ -230,9 +230,6 @@ def ulampoints(ds,**kwargs):
 					## Create an ulampoint object
 					u = ulampoint(point=computedulam.x,fun=computedulam.fun)
 
-
-					print(u)
-
 					# Add to the correct place in the xarray
 					ulamstep = (1-i/N)*steps[j]+ (i/N)*steps[j+1]
 					da.loc[dict(step=ulamstep,variable_1=variables[v1],variable_2=variables[v2])]=u
