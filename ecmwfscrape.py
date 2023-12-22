@@ -40,16 +40,18 @@ import sys
 p = configargparse.ArgParser(default_config_files=['ecmwfscrape.conf'],description=__doc__,formatter_class=configargparse.RawDescriptionHelpFormatter)
 p.add('-c', '--my-config', required=False, is_config_file=True, help='config file path')
 
-p.add('--firststep',  type=int, help='Firststep',default=0) # this will be redone when findulam is updated
-p.add('--laststep', type=int, help='Laststep',default=6) # this will be redone when findulam is updated
+# Perhaps there should be a better default for firststep and laststep
+p.add('--firststep',  type=int, help='Firststep in hours. Must be between the smallest and largest step in the grib2 file used',default=0) 
+p.add('--laststep', type=int, help='Laststep in hours.  Must be between the smallest and largest step in the grib2 file used',default=6) 
 
 p.add('--grib2',type=str,help='skip downloading from ecmwf and use this grib2 file instead')
 p.add('--grib2_filename',default='data.grib2',type=str,help='grib filename to use when scraping from ecmwf')
 
 p.add('--date',type=int, help='date of the ecmwf scrape (ignored if --grib2 is specified)',default =0)
 p.add('--time', type=int, help='time of the ecmwf scrape (ignored if --grib2 is specified)',default =0)
+p.add('--step',default='',type=str,nargs='+',help='step(s) of the ecmwf scrape as an array  (ignored if --grib2 is specified)')
 
-p.add('--N', type=int,default=720,help='Number of ulampoints to compute (default 720 which is 1 per minute for 12 hours')
+p.add('--N', type=int,default=360,help='Number of ulampoints to compute (default 360 which is 1 per minute if firststep and laststep differ by 6 hours')
 p.add('--tolerance',type=float,default = 1e-10,help='Tolerance for the ulam points (all that do not meet this are rejected)') 
 
 p.add('--bu_local_directory',default = "", type=str,help='local directory to store bu data files produced from this script')
@@ -74,10 +76,10 @@ logger.setLevel(logging.DEBUG)
 
 # Initialize Data
 bu_local_directory  = args.bu_local_directory
-firststep = args.firststep
-laststep = args.laststep
-steps=[numpy.timedelta64(firststep,'h'), numpy.timedelta64(laststep,'h')]
 
+## TODO: How do you convert this to nanoseconds?
+firststep = numpy.timedelta64(args.firststep,'h')
+laststep = numpy.timedelta64(args.laststep,'h')
 
 #
 # Get data from ECMWF
@@ -90,7 +92,7 @@ if (args.grib2 ==None):
 	logger.info('Scraping data from ECMWF')
 	client = Client()
 	result  = client.retrieve(
-		step=[firststep,laststep],
+		step = list(args.step),
 		type="cf",
 		param = ["2t","msl"],
 		date = args.date,
@@ -112,7 +114,7 @@ ds = xr.open_dataset(grib2file,engine='cfgrib')
 logger.info('Finding ulampoints')
 N=args.N
 start = time.time()
-ulamlist = findulam.compute_ulampoints_between_timesteps(ds,steps=steps,N=N,tolerance=args.tolerance)
+ulamarray = findulam.ulampoints(ds,steps=[firststep,laststep],N=N,tolerance=args.tolerance)
 logger.info('Finding ulampoints completed in '+str(time.time()-start)+'s')
 
 
@@ -120,25 +122,31 @@ logger.info('Finding ulampoints completed in '+str(time.time()-start)+'s')
 # All we record here is the ulamstep (rounded to second) and the ulampoint
 # Also we throw away those ulampoints not within a tolerances of 1e-8
 
-ulamlist_cropped = [[numpy.timedelta64(ulam['ulamstep'], 's').astype(float),ulam['ulampoint']] for ulam in ulamlist if ulam['OptimizeResult'].fun<args.tolerance]
-logger.info('ulamlist length: '+ str(len(ulamlist))+ ' of which '+ str(len(ulamlist_cropped))+ ' were found within tolerance')
+ulamarray = ulamarray.sel(variable_1='t2m',variable_2='msl')
 
-bu_filename = 'bu-'+numpy.datetime_as_string(ds.time.data,'D')+'T'+ str(args.time)+'h:'+str(firststep)+':'+str(laststep)+'.js'
-bu_ulampoints_filename = 'bu-ulampoints-'+numpy.datetime_as_string(ds.time.data,'D')+'T'+ str(args.time)+'h:'+str(firststep)+':'+str(laststep)+'.js'
+ulamlist_cropped = [[numpy.timedelta64(ulamarray.step.data[i], 's').astype(float),ulamarray.ulampoint.data[i].point.tolist()] for i in range(len(ulamarray.step.data)) if ulamarray.ulampoint.data[i].fun<args.tolerance]
+
+print(ulamlist_cropped)
+logger.info('ulamlist length: '+ str(len(ulamarray.step.data))+ ' of which '+ str(len(ulamlist_cropped))+ ' were found within tolerance')
+
+bu_filename = 'bu-'+numpy.datetime_as_string(ds.time.data,'D')+'T'+ str(args.time)+'h:'+str(args.firststep)+':'+str(args.laststep)+'.js'
+bu_ulampoints_filename = 'bu-ulampoints-'+numpy.datetime_as_string(ds.time.data,'D')+'T'+ str(args.time)+'h:'+str(args.firststep)+':'+str(args.laststep)+'.js'
 
 
 bu_local_filename = bu_local_directory+bu_filename
 bu_ulampoints_local_filename = bu_local_directory+bu_ulampoints_filename
 
-ds0=ds.sel(step=steps[0])
-ds1=ds.sel(step=steps[1])
+
+ds0=ds.interp(step=firststep) 
+ds1=ds.interp(step=laststep) 
+
 
 bu = {
 'ds_datetime':  numpy.datetime_as_string(numpy.datetime64(ds.time.data, 'ms')), 
-'ulamlist': ulamlist_cropped,
-'initial_timestep': numpy.timedelta64(ds0.step.data, 's').astype(float),
-'final_timestep': numpy.timedelta64(ds1.step.data, 's').astype(float),
-'t_initial': numpy.array(ds0['t2m'].data).tolist(),
+'ulamlist': ulamlist_cropped,											
+'initial_timestep': numpy.timedelta64(firststep, 's').astype(float), 
+'final_timestep': numpy.timedelta64(laststep, 's').astype(float),   
+'t_initial': numpy.array(ds0['t2m'].data).tolist(),						
 'p_initial': numpy.array(ds0['msl'].data).tolist(),
 't_final': numpy.array(ds1['t2m'].data).tolist(),
 'p_final': numpy.array(ds1['msl'].data).tolist()
@@ -153,8 +161,8 @@ f.close
 bu_ulampoints = {
 'ds_datetime':  numpy.datetime_as_string(numpy.datetime64(ds.time.data, 'ms')), 
 'ulamlist': ulamlist_cropped,
-'initial_timestep': numpy.timedelta64(ds0.step.data, 's').astype(float),
-'final_timestep': numpy.timedelta64(ds1.step.data, 's').astype(float),
+'initial_timestep': numpy.timedelta64(firststep, 's').astype(float),
+'final_timestep': numpy.timedelta64(laststep, 's').astype(float),
 }
 f = open(bu_ulampoints_local_filename, 'w' )
 logging.info('Writing bu.js file')
