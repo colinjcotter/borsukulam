@@ -1,0 +1,42 @@
+# Borsuk-Ulam
+
+Borsuk-Ulam is a Python library to compute antipodal points on the sphere from ECMWF data files
+
+## Requirements
+pip install ecmwf-open-data xarray numpy xarray scipy json logging cfgrib
+
+# get sample data from ECMWF
+
+```python
+from ecmwf.opendata import Client
+client = Client()
+result  = client.retrieve(step=[0,6],type="cf",param = ["2t","msl","sp"],target="data.grib2",)
+
+## Find ulampoints in the above data file
+
+```python
+import findulam
+ds = xr.open_dataset('data.grib2',engine='cfgrib')
+ulamdata = findulam.ulampoints(ds)
+
+## See what the temperature/pressure ulampoints are
+```python
+data = ulamdata.sel[variable_1='2t',variable_2='msl'].ulampoints.data
+data[0].point
+data[1].point
+
+## Find ulampoints at other times **numpy time array needed***
+```python
+findulam.ulampoints(ds,step = [0,1,2,3,4,5,6])
+
+## Find ulampoints at one minute intervals between 0h and 1h
+```python
+findulam.ulampoints(ds,step = [0,1], N=60)
+
+## Restrict to only temperature and pressure
+```python
+python3 findulam.py -h
+
+## License
+
+TBD
