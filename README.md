@@ -2,7 +2,7 @@
 
 A small library to compute the location of antipodal points on the sphere that have the two of the same atmospheric data (e.g. temperature and pressure).
 
-Used to compute the points on julius-ross.com/Borsuk-Ulam
+Example use can be found at http://julius-ross.com/Borsuk-Ulam
 
 ## Prerequisites
 
@@ -48,16 +48,16 @@ Data variables:
     optimizeresult     (step, variable_1, variable_2) object None ... None
     time               datetime64[ns] ...
     
-# Select just temperature and pressure
+# Select the data correspinding to the variables temperature and pressure
 ulampoints = ulampoints.sel(variable_1='msl',variable_2='t2m')
 
 # The actual time of the first computed ulampoint
 ulampoints.time.data + ulampoints.step.data[0]
 
 # The location time of the first computed ulampoint
+numpy.datetime64('2023-12-23T12:00:00.000000000')
 
-numpy.datetime64('2023-12-23T12:00:00.000000000') # sample output; will be None if numerical method fails to find within tolerance
-[ulampoints.ulampoint_lat.data[0],ulampoints.ulampoint_lon.data[0]]
+[ulampoints.ulampoint_lat.data[0],ulampoints.ulampoint_lon.data[0]]  # sample output; will be None if numerical method is not succesful within tolerance
 [-9.632231990420905, 13.866959712623363]  #  sample output
 
 # The optimization results of the computation for the first ulampoint (sample output)
@@ -80,7 +80,7 @@ ds0 = ds[['msl','t2m']]
 ulampoints = findulam.ulampoints(ds0)
 ```
 
-You can specify the steps (and if they are not in the ds file then xarray interpolation is used).  
+You can also specify the steps (and if they are not in the ds file then xarray interpolation is used).  
 
 ```python
 # Return the ulampoints at step 1h and 3h
@@ -109,8 +109,8 @@ Data variables:
 
 # ecmwfscrape.py
 
-This is a script to scrape data from ECMWF and run findulam.ulampoints and create some javascript files to be used on julius-ross/Borsuk-Ulam.  It is unlikley to be useful to anybody else
+This is a script to scrape data from ECMWF and run findulam.ulampoints and create some javascript files to be used on julius-ross.com/Borsuk-Ulam.  It is unlikley to be useful to anybody else
 
 # /website
 
-If you want to have a local copy of the website julius-ross/Bosruk-Ulam the files are here.  Edit mapbox.js to include your own mapbox token.  Other things can be changed in config.js (e.g. the mapbox style)
+If you want to have a local copy of the website julius-ross.com/Bosruk-Ulam the files are here.  Edit mapbox.js to include your own mapbox token.  Other things can be changed in config.js (e.g. the mapbox style)
