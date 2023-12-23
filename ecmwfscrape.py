@@ -78,8 +78,8 @@ logger.setLevel(logging.DEBUG)
 bu_local_directory  = args.bu_local_directory
 
 ## TODO: How do you convert this to nanoseconds?
-firststep = numpy.timedelta64(args.firststep,'h')
-laststep = numpy.timedelta64(args.laststep,'h')
+firststep = numpy.timedelta64(args.firststep*3600000000000,'ns')
+laststep = numpy.timedelta64(args.laststep*3600000000000,'ns')
 
 #
 # Get data from ECMWF
