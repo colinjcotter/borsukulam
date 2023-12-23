@@ -50,18 +50,34 @@ Data variables:
     
 # Select just temperature and pressure
 ulampoints = ulampoints.sel(variable_1='msl',variable_2='t2m')
+
 # The actual time of the first computed ulampoint
 ulampoints.time.data + ulampoints.step.data[0]
-numpy.datetime64('2023-12-23T12:00:00.000000000') # sample output
+
+# The location time of the first computed ulampoint
+
+numpy.datetime64('2023-12-23T12:00:00.000000000') # sample output; will be None if numerical method fails to find within tolerance
 [ulampoints.ulampoint_lat.data[0],ulampoints.ulampoint_lon.data[0]]
-[12.400000002986411, -111.59999999163651]  #  sample output
+[-9.632231990420905, 13.866959712623363]  #  sample output
+
+# The optimization results of the computation for the first ulampoint (sample output)
+ ulampoints.optimizeresult.data[0]
+
+ message: Optimization terminated successfully.
+ success: True
+     fun: 6.535813980708355e-26
+       x: [-9.632e+00  1.387e+01]
+     nit: 150
+    nfev: 4569
+
 
 ```
 
 If you want to compute just for particular parameters use xarray select first:
 
 ```python
-ulampoints = findulam.ulampoints(ds.sel(param = ['2t','msl']))
+ds0 = ds[['msl','t2m']]
+ulampoints = findulam.ulampoints(ds0)
 ```
 
 You can specify the steps (and if they are not in the ds file then xarray interpolation is used).  
@@ -97,4 +113,4 @@ This is a script to scrape data from ECMWF and run findulam.ulampoints and creat
 
 # /website
 
-If you want to have a local copy of the website julius-ross/Bosruk-Ulam the files are here.  Edit mapbox.js to include your own mapbox token.  Other things can be changed in config.js (e.g. the style)
+If you want to have a local copy of the website julius-ross/Bosruk-Ulam the files are here.  Edit mapbox.js to include your own mapbox token.  Other things can be changed in config.js (e.g. the mapbox style)
