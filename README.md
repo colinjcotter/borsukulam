@@ -18,7 +18,7 @@ This library has been tested on ECMWF open-data.   The following should get you 
 from ecmwf.opendata import Client
 client = Client()
 result  = client.retrieve(step=[0,6],type="cf",param = ["2t","msl","sp"],target="data.grib2",)
-ds = xr.open_dataset('data.grib2',engine='cfgrib')
+
 ```
 
 ## Finding Ulampoints
@@ -26,6 +26,8 @@ ds = xr.open_dataset('data.grib2',engine='cfgrib')
 The following will give you the ulampoints for all pairs of parameters in the ds file and all steps (so in the above example at 0h and 6h, and each pair among '2t','msl','sp')
 
 ```python
+import findulam
+ds = xr.open_dataset('data.grib2',engine='cfgrib')
 ulampoints = findulam.ulampoints(ds)
 print(ulampoints)
 ```
@@ -34,7 +36,6 @@ You can select particular parameters, for instance the following gives ulampoint
 
 ```python
 ulampoints = findulam.ulampoints(ds.sel(param = ['2t','msl']))
-print(ulampoints)
 ```
 
 You can specify the steps (and if they are not in the ds file then xarray interpolation is used).  
