@@ -232,7 +232,10 @@ def ulampoints(ds,**kwargs):
 
 					# Add to the correct place in the xarray
 					ulamstep = (1-i/N)*steps[j]+ (i/N)*steps[j+1]
-					
+					print(type(ulamstep))
+					print('stepj',steps[j])
+					print('stepj+1',steps[j+1])
+					print('i,N',i,N)
 					print('ulamstep',ulamstep,'u',u)
 					da.loc[dict(step=ulamstep,variable_1=variables[v1],variable_2=variables[v2])]=u
 					da.loc[dict(step=ulamstep,variable_1=variables[v2],variable_2=variables[v1])]=u
