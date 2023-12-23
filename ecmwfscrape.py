@@ -125,8 +125,6 @@ logger.info('Finding ulampoints completed in '+str(time.time()-start)+'s')
 ulamarray = ulamarray.sel(variable_1='t2m',variable_2='msl')
 
 ulamlist_cropped = [[numpy.timedelta64(ulamarray.step.data[i], 's').astype(float),ulamarray.ulampoint.data[i].point.tolist()] for i in range(len(ulamarray.step.data)) if ulamarray.ulampoint.data[i].fun<args.tolerance]
-
-print(ulamlist_cropped)
 logger.info('ulamlist length: '+ str(len(ulamarray.step.data))+ ' of which '+ str(len(ulamlist_cropped))+ ' were found within tolerance')
 
 bu_filename = 'bu-'+numpy.datetime_as_string(ds.time.data,'D')+'T'+ str(args.time)+'h:'+str(args.firststep)+':'+str(args.laststep)+'.js'
