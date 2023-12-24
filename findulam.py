@@ -45,14 +45,15 @@ def findulam(t,p,lat,long,**kwargs):
 	long - longidude as 2 dimensional array
 	initialguess (optional) - initial point as [lat,long] for the numerical method
 	tolerance (optional) - the tolerance after which to stop the basinhopping method (default 1e-13)
+	factor (optional) - minimise the following function t(x)^2 + c^2 p(x)^2 where c=factor (default 1)
 	
 	Returns OptimizeResult of the final method used
 	"""
 	
 	# Set default arguments
-	defaultKwargs = { 'tolerance': 1e-13}
+	defaultKwargs = { 'tolerance': 1e-13, 'factor': 1}
 	kwargs = { **defaultKwargs, **kwargs }
-	
+	factor = kwargs['factor']
 	tolerance = kwargs['tolerance']
 	#get some dimension sizes
 	nlong = long.size
@@ -92,20 +93,30 @@ def findulam(t,p,lat,long,**kwargs):
 
 	#make a function for the square of the interpolator
 	def fsq(x):
-		return (fp(wraplatlong(x))**2)+100*(f(wraplatlong(x))**2)
-		
-	# This tolerancecounter is kind of dumb; it asks for a few iterations below tolerance
-	# before returning False.  FIXME
+		return (factor**2)*(fp(wraplatlong(x))**2)+(f(wraplatlong(x))**2)
+	
+	def fsq_withoutfactor(x):
+		return (fp(wraplatlong(x))**2)+(f(wraplatlong(x))**2)
 
-	tolerancecounter = 0
+# This was kind of dumb, but the below seems to be working fine
+# 	tolerancecounter = 0
+# 	def callback_func(x, f, accepted):
+# 		tolerance2 = 1e-10
+# 		nonlocal tolerancecounter
+# 		if (f<tolerance2):
+# 			tolerancecounter=tolerancecounter+1
+# 		if (tolerancecounter==2):
+# 			return True
+# 		else:
+# 			return False
+			
+			
 	def callback_func(x, f, accepted):
-		nonlocal tolerancecounter
-		if (fsq(x)<tolerance):
-			tolerancecounter=tolerancecounter+1
-		if (tolerancecounter==2):
+		if f<tolerance:
 			return True
 		else:
 			return False
+		
 		
 	skip_optimizing_with_differential_evolution=False
 	
@@ -116,6 +127,7 @@ def findulam(t,p,lat,long,**kwargs):
 		if (ret.fun<tolerance):
 			skip_optimizing_with_differential_evolution = True
 			ret['findulam']="Computed with scipy.optimize.basinhopping"
+			ret['fun_without_factor'] = fsq_withoutfactor(ret.x)
 		else:
 			logger.debug('Basinhopping failed to get within tolerance')
 			logger.debug('Basinhopping Optimizeresult:')
@@ -126,6 +138,7 @@ def findulam(t,p,lat,long,**kwargs):
 		bounds = [(-90.0,90.0),(-180.0,180.0)]	
 		ret = optimize.differential_evolution(fsq, bounds)
 		ret['findulam']="Computed with scipy.optimize.differential_evolution"
+		ret['fun_without_factor'] = fsq_withoutfactor(ret.x)
 	
 	return(ret)
 
@@ -158,7 +171,7 @@ def ulampoints(ds,**kwargs):
 	"""
 
 	# Setup default arguments
-	defaultKwargs = {'tolerance': 1e-13, 'steps': ds.step.data}
+	defaultKwargs = {'tolerance': 1e-10, 'steps': ds.step.data}
 	kwargs = { **defaultKwargs, **kwargs }
 	steps = kwargs['steps']
 	tolerance = kwargs['tolerance']
@@ -189,7 +202,11 @@ def ulampoints(ds,**kwargs):
 
 	for v1 in range(len(variables)):	
 		for v2 in range(v1+1,len(variables)):
+			factor = ds[variables[v1]].data[0].mean() / ds[variables[v2]].data[0].mean()
 			logger.info('Calculating Ulampoints for variables: '+variables[v1]+' and '+variables[v2])
+			logger.debug('Factor used for the energy function '+str(factor))
+
+
 			for j in range(steps.size):	
 			
 				if steps.size ==1:
