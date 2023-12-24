@@ -53,18 +53,18 @@ Data variables:
     optimizeresult     (step, variable_1, variable_2) object None ... None
     time               datetime64[ns] ...
     
-# Select the data correspinding to the variables temperature and pressure
+# Select the data corresponding to the variables temperature and pressure
 ulampoints = ulampoints.sel(variable_1='msl',variable_2='t2m')
 
-# The actual time of the first computed ulampoint
+## The actual time of the first computed ulampoint
 ulampoints.time.data + ulampoints.step.data[0]
 numpy.datetime64('2023-12-23T12:00:00.000000000')
 
-# The location time of the first computed ulampoint
+## The location time of the first computed ulampoint
 [ulampoints.ulampoint_lat.data[0],ulampoints.ulampoint_lon.data[0]]  # sample output; will be None if numerical method is not succesful within tolerance
 [-9.632231990420905, 13.866959712623363]  #  sample output
 
-# The optimization results of the computation for the first ulampoint (sample output)
+## The optimization results of the computation for the first ulampoint (sample output)
  ulampoints.optimizeresult.data[0]
 
  message: Optimization terminated successfully.
@@ -87,7 +87,7 @@ ulampoints = findulam.ulampoints(ds0)
 You can also specify the steps (and if they are not in the ds file then xarray interpolation is used).  
 
 ```python
-# Return the ulampoints at step 1h and 3h
+## Return the ulampoints at step 1h and 3h
 import numpy
 steplist = [numpy.timedelta64(1*3600000000000,'ns'), numpy.timedelta64(2*3600000000000,'ns')]
 ulampoints = findulam.ulampoints(ds,steps=steplist)
@@ -110,12 +110,13 @@ Data variables:
     time               datetime64[ns] ...
 
 ```
-# Verbosity
+## Verbosity
 
 If using the python interpretor you can see the logging produced by findulam with the following (change INFO to DEBUG for even more)
 
 ```
 import logging
+import sys
 log = logging.getLogger()
 log.setLevel(logging.INFO)
 stream = logging.StreamHandler(sys.stdout)
