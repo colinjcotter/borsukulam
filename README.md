@@ -22,7 +22,7 @@ result  = client.retrieve(step=[0,6],type="cf",param = ["2t","msl","sp"],target=
 ```
 
 
-## Finding Ulampoints
+## Loading the data source
 
 The following will give you the ulampoints for all pairs of parameters in the ds file and all steps (so in the above example at 0h and 6h, and each pair among '2t','msl','sp')
 
@@ -59,8 +59,10 @@ Attributes:
 
 The library is expecting only 3 indexed coordinates named step, longtitude and latitude.  If more are present in the datasource file then select along those coordinates using ds.sel(...)
 
+## Finding Ulampoints
+
 ```python
-ulampoints = findulam.ulampoints(ds)
+ula mpoints = findulam.ulampoints(ds)
 print(ulampoints)
 
 <xarray.Dataset>
