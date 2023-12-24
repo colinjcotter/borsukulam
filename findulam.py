@@ -1,37 +1,3 @@
-#
-# Package to numerically find ulam points from ECMWF data
-#
-#
-# Typical use
-#
-# Get the data from ECMWF
-#
-# from ecmwf.opendata import Client
-# client = Client()
-# result  = client.retrieve(step=[0,6],type="cf",param = ["2t","msl","sp"],target="data.grib2",)
-# ds = xr.open_dataset('data.grib2',engine='cfgrib')
-#
-#
-# ulampoints(ds)
-#
-# Alternatively you can use the data array itself
-#
-# ds0=ds.sel(step='0:00:00')
-# t=ds0['t2m'].data 
-# p=ds0['t2m'].data
-# lat = ds0['latitude']
-# long = ds0['longitude']
-#
-# findulam(t,p,lat,long)
-# 
-
-
-#Todo:
-#Options for logging
-#See about ECMWF accuracy at 0,6,12h etc
-#Get head around xarray interpolation
-#Think about how you want to change the ecmwfscrape.py
-
 import netCDF4
 import xarray as xr
 import numpy
@@ -53,28 +19,28 @@ def wraplatlong(x):
 	return [wraplat(x[0]),wraplong(x[1])]
 
 
-class ulampoint:
-	""" Class that contains the information of a single ulampoint.   Fun means the energy at that point (so will be zero at a true ulampoint)
-	"""
-	def __init__(self, point,fun):
-		self.point = point
-		self.fun = fun
-	def __str__(self):
-		return f"Ulampoint -  Point: {self.point} Fun : {self.fun}"
-
+# class ulampoint:
+# 	""" Class that contains the information of a single ulampoint.   Fun means the energy at that point (so will be zero at a true ulampoint)
+# 	"""
+# 	def __init__(self, point,fun):
+# 		self.point = point
+# 		self.fun = fun
+# 	def __str__(self):
+# 		return f"Ulampoint -  Point: {self.point} Fun : {self.fun}"
+# 
 
 
 #TODO: Allow for optional choice of numerical method to use
 
 def findulam(t,p,lat,long,**kwargs):
-	""" Numerically Computes an ulam point from to data sets (classically temperature and pressure)
+	""" Numerically Computes an ulam point from two variables (classically temperature and pressure)
 	If an initialguess is given then start with the scipy.optimize.basinhopping method starting at this initialguess
 	If either initialguess is not given, or the basinhopping does not give an answer within tolerance
 	then use the scipy.optimize.differential_evolution method
 	
 	Arguments
-	t - first data set as 2 dimensional array
-	p - second data set as 2 dimensional array
+	t - first variable as 2 dimensional array
+	p - second variable as 2 dimensional array
 	lat - latitude as 2 dimensional array
 	long - longidude as 2 dimensional array
 	initialguess (optional) - initial point as [lat,long] for the numerical method
@@ -145,22 +111,31 @@ def findulam(t,p,lat,long,**kwargs):
 	
 	if 'initialguess' in kwargs:
 		xinit = numpy.array(kwargs['initialguess'])	
+		logger.debug('Runnning basinhopping with initialguess '+str(kwargs['initialguess']))
 		ret = optimize.basinhopping(fsq, xinit,T=2,niter=100,callback=callback_func,disp=False)
 		if (ret.fun<tolerance):
 			skip_optimizing_with_differential_evolution = True
+			ret['findulam']="Computed with scipy.optimize.basinhopping"
 		else:
 			logger.debug('Basinhopping failed to get within tolerance')
+			logger.debug('Basinhopping Optimizeresult:')
 			logger.debug(ret)
 			
 	if skip_optimizing_with_differential_evolution==False:
 		logger.debug('Runnning differential_evolution')
 		bounds = [(-90.0,90.0),(-180.0,180.0)]	
 		ret = optimize.differential_evolution(fsq, bounds)
+		ret['findulam']="Computed with scipy.optimize.differential_evolution"
+	
 	return(ret)
 
 
 
 
+# Todo: Option just to return those ulampoints within tolerance
+# Option for scaling of variables for the numerical method
+# Option as to what we return (do we return just the point or the entire output of the optimizemethod) 
+#
 
 def ulampoints(ds,**kwargs):
 	""" Calculates ulampoints from an xarray datasource from ECMWF
@@ -169,79 +144,84 @@ def ulampoints(ds,**kwargs):
 	ds - ECMWF data source file	
 
 	Optional Arguments
-	steps -  List of timedeltas to use.  If there are not in the ds.step file then the xarray interpolate will be used (default all steps in ds file)
-	variables -  List of the non-coordinate variables within the ds file to compute the ulam points  (default all variables available)
-	N  - Divide the interval between subsequent elements of steps into N equally spaced timesteps, and compute the ulampoints at these times assuming linear interpolation of the data.  This is only used if the length of timesteps is at least 2.  Note that if N is larger than 2 then the ulam point for the final step will not be included (default N=1; ignored if only one step is given in steps)
+	steps -  numpy.array of timedelta64 steps at which to calculate ulampoints.  If there are not equal to those in ds.step.data then the xarray interpolate will be used (default ds.steps.data)
 	tolerance - tolerance of the numerical method (default 1e-13)
-	initialguess - initial point as [lat,long] for the first run of the numerical method.  After that the result from the previous iteration is used as the initialguess.  	
 	
 	Returns: xarray object containing all the ulampoints found
 	
-	Coordinates: time
-				 variable_1 is the first variable used for the ulampoint (no ulam point is given when variable_1 = variable_2)
-				 variable_2 is the first variable used for the ulampoint 
+	Coordinates: steps
+			     non-coordinate variables of ds
 				 
-	Data variables: ulampoint: the data of the ulampoint (type ulampoint)
+	Data variables: ulampoint_lat: the latitude location of the ulampoint (if numerical method succeeds within tolerance)
+					ulampoint_lon: the longtitude location of the ulampoint  (if numerical method succeeds within tolerance)
+					Optimizeresult: the details of the optimization result (type Optimizeresult)
 	"""
 
 	# Setup default arguments
-	defaultKwargs = {'N': 1, 'tolerance': 1e-13, 'steps': ds.step.data, 'variables': [var for var in ds.data_vars if var not in ds.coords]}
+	defaultKwargs = {'tolerance': 1e-13, 'steps': ds.step.data}
 	kwargs = { **defaultKwargs, **kwargs }
-	N = kwargs['N']
 	steps = kwargs['steps']
 	tolerance = kwargs['tolerance']
-	variables = kwargs['variables']
-			
-	#If there is only one step given then we will return just the ulam point of that step
-	if len(steps)==1:
-		steps.append(steps[0])
-		N=1
+	# Take all the variables in the ds files that are not coordinates
+	variables = [var for var in ds.data_vars if var not in ds.coords]
 	
 
-	timesteps = [ (1-i/N)*steps[j]+ (i/N)*steps[j+1] for i in range(N)  for j in range(len(steps)-1)]
+	# If there is only one step given then make it into an array	
+	if steps.size ==1:
+		steps = numpy.reshape(steps,[1])
 	
-	da = xr.DataArray(data=None,dims=['step','variable_1','variable_2'], coords = { 'step': timesteps,'variable_1': variables, 'variable_2': variables})
+	datasteps = ds.step.data
+	if datasteps.size ==1:
+		datasteps = numpy.reshape(datasteps,[1])
+		
+	if max(steps)> max(datasteps) or min(steps)<min(datasteps):
+		raise Exception("All steps must be in the range included in the ds file")
+
+	
+	da_lat = xr.DataArray(data=None,dims=['step','variable_1','variable_2'], coords = { 'step': steps,'variable_1': variables, 'variable_2': variables})
+	da_lon = xr.DataArray(data=None,dims=['step','variable_1','variable_2'], coords = { 'step': steps,'variable_1': variables, 'variable_2': variables})
+	da_opt = xr.DataArray(data=numpy.empty([steps.size,len(variables),len(variables)],dtype=object),dims=['step','variable_1','variable_2'], coords = { 'step': steps,'variable_1': variables, 'variable_2': variables})
 
 	#
-	# Now loop over pairs of variables (v1,v2), timesteps in steps (j) and then i from 0 to N and calculate the ulampoint at (i/N) between steps[j] and steps[j+1]
+	# Now loop over pairs of variables (v1,v2) and timesteps
 	#
+	# Todo: Fixme for the initialguess
 
 	for v1 in range(len(variables)):	
 		for v2 in range(v1+1,len(variables)):
-			print('Calculating Ulampoints for ', variables[v1],variables[v2])
-			for j in range(len(steps)-1):	
-				
-				data0 = ds.interp(step=steps[j])
-				data1 = ds.interp(step=steps[j+1])
+			logger.info('Calculating Ulampoints for variables: '+variables[v1]+' and '+variables[v2])
+			for j in range(steps.size):	
 			
-				for i in range(N):	
+				if steps.size ==1:
+					data0 = ds
+				else:
+					data0 = ds.interp(step=steps[j])	
 				
-					parameters = {
-					'tolerance':tolerance,
-					}
-					if 'initialguess' in locals():
-						parameters['initialguess']=initialguess
-			
-					t = (i/N) * data1[variables[v1]].data + (N-i)/N * data0[variables[v1]].data
-					p = (i/N) * data1[variables[v2]].data + (N-i)/N * data0[variables[v2]].data
-
-					computedulam = findulam(t,p,ds['latitude'],ds['longitude'],**parameters)
+							
+				parameters = {
+				'tolerance':tolerance,
+				}
+				
+				if j>0:
+					parameters['initialguess']=initialguess
 		
-					## Create an ulampoint object
-					u = ulampoint(point=computedulam.x,fun=computedulam.fun)
+				t = data0[variables[v1]].data
+				p = data0[variables[v2]].data
 
-					# Add to the correct place in the xarray
-					ulamstep = (1-i/N)*steps[j]+ (i/N)*steps[j+1]
-					print(type(ulamstep))
-					print('stepj',steps[j])
-					print('stepj+1',steps[j+1])
-					print('i,N',i,N)
-					print('ulamstep',ulamstep,'u',u)
-					da.loc[dict(step=ulamstep,variable_1=variables[v1],variable_2=variables[v2])]=u
-					da.loc[dict(step=ulamstep,variable_1=variables[v2],variable_2=variables[v1])]=u
-					logger.debug(u)
-					initialguess = computedulam.x	
+				computedulam = findulam(t,p,ds['latitude'],ds['longitude'],**parameters)
+				logger.info('Ulampoint for step '+str(steps[j])+' : '+str([computedulam.x[0],computedulam.x[1]]))
+				
+				# Add to the xarray
+				da_opt.loc[dict(step=steps[j],variable_1=variables[v1],variable_2=variables[v2])]=computedulam
+				da_opt.loc[dict(step=steps[j],variable_1=variables[v2],variable_2=variables[v1])]=computedulam
+				if computedulam.fun<tolerance:
+					da_lat.loc[dict(step=steps[j],variable_1=variables[v1],variable_2=variables[v2])]=computedulam.x[0]
+					da_lat.loc[dict(step=steps[j],variable_1=variables[v2],variable_2=variables[v1])]=computedulam.x[0]
+					da_lon.loc[dict(step=steps[j],variable_1=variables[v1],variable_2=variables[v2])]=computedulam.x[1]
+					da_lon.loc[dict(step=steps[j],variable_1=variables[v2],variable_2=variables[v1])]=computedulam.x[1]
+				logger.debug(computedulam)
+				initialguess = computedulam.x
 	
 	# TODO I think there is a better way to include the time as a coordinate, but this will do for now
-	ds1 = xr.Dataset({"ulampoint": da, "time": ds.time})
+	ds1 = xr.Dataset({"ulampoint_lat": da_lat, "ulampoint_lon": da_lon, "optimizeresult": da_opt, "time": ds.time})
 	return(ds1)

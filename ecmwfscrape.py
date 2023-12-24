@@ -18,7 +18,8 @@ The script is capable of doing the following:
 
 '''
 
-#Todo: Fix bulocalfilename using ./ and having a dot at the start
+#Todo: Better understand numpy timedelta
+#Todo: Check how accurate this linear interpolation is compared with measured data (and check the interpolation is working)
 
 import logging 
 import configargparse
@@ -30,6 +31,7 @@ import json
 import subprocess
 import time
 import sys
+import pdb
 
 
 #def my_handler(type, value, tb):
@@ -111,10 +113,21 @@ ds = xr.open_dataset(grib2file,engine='cfgrib')
 # Find the ulam points
 #
 
+
+#
+# Fixme: First we want to interpolate to create a new xarray with precisely two steps
+# Then we feed an array of timedelta64 into findulam.ulampoints
+#
+
 logger.info('Finding ulampoints')
 N=args.N
+steparray = [(1-i/N)*firststep +(i/N)*laststep for i in range(N)]
+
+# Add the interpolated values back to the original array
+ds_interp=ds.interp(step=[firststep,laststep])
+
 start = time.time()
-ulamarray = findulam.ulampoints(ds,steps=[firststep,laststep],N=N,tolerance=args.tolerance)
+ulamarray = findulam.ulampoints(ds_interp,steps=steparray,tolerance=args.tolerance)
 logger.info('Finding ulampoints completed in '+str(time.time()-start)+'s')
 
 
@@ -122,10 +135,17 @@ logger.info('Finding ulampoints completed in '+str(time.time()-start)+'s')
 # All we record here is the ulamstep (rounded to second) and the ulampoint
 # Also we throw away those ulampoints not within a tolerances of 1e-8
 
-ulamarray = ulamarray.sel(variable_1='t2m',variable_2='msl')
 
-ulamlist_cropped = [[numpy.timedelta64(ulamarray.step.data[i], 's').astype(float),ulamarray.ulampoint.data[i].point.tolist()] for i in range(len(ulamarray.step.data)) if ulamarray.ulampoint.data[i].fun<args.tolerance]
-logger.info('ulamlist length: '+ str(len(ulamarray.step.data))+ ' of which '+ str(len(ulamlist_cropped))+ ' were found within tolerance')
+
+
+ulamarray = ulamarray.sel(variable_1='t2m',variable_2='msl')
+# Make an appropriate list of all the ulampoints that (ignoring those that are 'None')
+ulamlist_cropped = [[numpy.timedelta64(ulamarray.step.data[i], 's').astype(float),[ulamarray.ulampoint_lat.data[i],ulamarray.ulampoint_lon.data[i]]] for i in range(len(ulamarray.step.data)) if ulamarray.ulampoint_lat.data[i]!=None]
+
+pdb.set_trace()
+
+
+logger.info('timstep length'+ str(len(ulamarray.step.data))+ ' of which '+ str(len(ulamlist_cropped))+ ' ulampoints were found within tolerance')
 
 bu_filename = 'bu-'+numpy.datetime_as_string(ds.time.data,'D')+'T'+ str(args.time)+'h:'+str(args.firststep)+':'+str(args.laststep)+'.js'
 bu_ulampoints_filename = 'bu-ulampoints-'+numpy.datetime_as_string(ds.time.data,'D')+'T'+ str(args.time)+'h:'+str(args.firststep)+':'+str(args.laststep)+'.js'

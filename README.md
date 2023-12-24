@@ -21,6 +21,7 @@ result  = client.retrieve(step=[0,6],type="cf",param = ["2t","msl","sp"],target=
 
 ```
 
+
 ## Finding Ulampoints
 
 The following will give you the ulampoints for all pairs of parameters in the ds file and all steps (so in the above example at 0h and 6h, and each pair among '2t','msl','sp')
@@ -29,6 +30,10 @@ The following will give you the ulampoints for all pairs of parameters in the ds
 import findulam
 import xarray as xr
 ds = xr.open_dataset('data.grib2',engine='cfgrib')
+```
+
+Note: The library is expecting only two coordinates named longtitude and latitude (marked with a * here).  If more are present the select one using ds.sel(...)
+
 ulampoints = findulam.ulampoints(ds)
 print(ulampoints)
 
@@ -55,7 +60,6 @@ ulampoints = ulampoints.sel(variable_1='msl',variable_2='t2m')
 ulampoints.time.data + ulampoints.step.data[0]
 numpy.datetime64('2023-12-23T12:00:00.000000000')
 
-
 # The location time of the first computed ulampoint
 [ulampoints.ulampoint_lat.data[0],ulampoints.ulampoint_lon.data[0]]  # sample output; will be None if numerical method is not succesful within tolerance
 [-9.632231990420905, 13.866959712623363]  #  sample output
@@ -73,7 +77,7 @@ numpy.datetime64('2023-12-23T12:00:00.000000000')
 
 ```
 
-If you want to compute just for particular parameters use xarray select first:
+If you want to compute just for particular parameters select using xarray first:
 
 ```python
 ds0 = ds[['msl','t2m']]
@@ -105,6 +109,18 @@ Data variables:
     optimizeresult     (step, variable_1, variable_2) object None ... None
     time               datetime64[ns] ...
 
+```
+# Verbosity
+
+If using the python interpretor you can see the logging produced by findulam with the following (change INFO to DEBUG for even more)
+
+```
+import logging
+log = logging.getLogger()
+log.setLevel(logging.INFO)
+stream = logging.StreamHandler(sys.stdout)
+stream.setLevel(logging.INFO)
+log.addHandler(stream)
 ```
 
 # ecmwfscrape.py
