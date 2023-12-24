@@ -63,7 +63,7 @@ The following will find the ulampoints for all pairs of parameters in the ds fil
 
 
 ```python
-ula mpoints = findulam.ulampoints(ds)
+ulampoints = findulam.ulampoints(ds)
 print(ulampoints)
 
 <xarray.Dataset>
