@@ -5,7 +5,6 @@ import scipy.interpolate as interpolate
 import scipy.optimize as optimize
 import json
 import logging
-import pdb
 
 logger = logging.getLogger(__name__)
 
@@ -100,18 +99,7 @@ def findulam(t,p,lat,long,**kwargs):
 	def fsq_withoutfactor(x):
 		return (fp(wraplatlong(x))**2)+(f(wraplatlong(x))**2)
 
-# This was kind of dumb, but the below seems to be working fine
-# 	tolerancecounter = 0
-# 	def callback_func(x, f, accepted):
-# 		tolerance2 = 1e-10
-# 		nonlocal tolerancecounter
-# 		if (f<tolerance2):
-# 			tolerancecounter=tolerancecounter+1
-# 		if (tolerancecounter==2):
-# 			return True
-# 		else:
-# 			return False
-			
+
 			
 	def callback_func(x, f, accepted):
 		if f<tolerance:
