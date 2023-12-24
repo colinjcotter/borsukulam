@@ -85,11 +85,11 @@ Data variables:
 # Select the data corresponding to the variables temperature and pressure
 ulampoints = ulampoints.sel(variable_1='msl',variable_2='t2m')
 
-## The actual time of the first computed ulampoint
+## The actual time of the first computed ulampoint for temperature and pressure
 ulampoints.time.data + ulampoints.step.data[0]
 numpy.datetime64('2023-12-23T12:00:00.000000000')
 
-## The location time of the first computed ulampoint
+## The location time of the first computed ulampoint for temperature and pressure
 [ulampoints.ulampoint_lat.data[0],ulampoints.ulampoint_lon.data[0]]  # sample output; will be None if numerical method is not succesful within tolerance
 [-9.632231990420905, 13.866959712623363]  #  sample output
 
