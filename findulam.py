@@ -19,19 +19,6 @@ def wraplatlong(x):
 	return [wraplat(x[0]),wraplong(x[1])]
 
 
-# class ulampoint:
-# 	""" Class that contains the information of a single ulampoint.   Fun means the energy at that point (so will be zero at a true ulampoint)
-# 	"""
-# 	def __init__(self, point,fun):
-# 		self.point = point
-# 		self.fun = fun
-# 	def __str__(self):
-# 		return f"Ulampoint -  Point: {self.point} Fun : {self.fun}"
-# 
-
-
-#TODO: Allow for optional choice of numerical method to use
-
 def findulam(t,p,lat,long,**kwargs):
 	""" Numerically Computes an ulam point from two variables (classically temperature and pressure)
 	If an initialguess is given then start with the scipy.optimize.basinhopping method starting at this initialguess
@@ -43,6 +30,7 @@ def findulam(t,p,lat,long,**kwargs):
 	p - second variable as 2 dimensional array
 	lat - latitude as 2 dimensional array
 	long - longidude as 2 dimensional array
+	disp (optional) - display steps of basinhoppin method (default false)
 	initialguess (optional) - initial point as [lat,long] for the numerical method
 	tolerance (optional) - the tolerance after which to stop the basinhopping method (default 1e-13)
 	factor (optional) - minimise the following function t(x)^2 + c^2 p(x)^2 where c=factor (default 1)
@@ -51,7 +39,7 @@ def findulam(t,p,lat,long,**kwargs):
 	"""
 	
 	# Set default arguments
-	defaultKwargs = { 'tolerance': 1e-13, 'factor': 1}
+	defaultKwargs = { 'tolerance': 1e-13, 'factor': 1, 'disp': false}
 	kwargs = { **defaultKwargs, **kwargs }
 	factor = kwargs['factor']
 	tolerance = kwargs['tolerance']
@@ -123,7 +111,9 @@ def findulam(t,p,lat,long,**kwargs):
 	if 'initialguess' in kwargs:
 		xinit = numpy.array(kwargs['initialguess'])	
 		logger.debug('Runnning basinhopping with initialguess '+str(kwargs['initialguess']))
-		ret = optimize.basinhopping(fsq, xinit,T=2,niter=100,callback=callback_func,disp=False)
+		
+		# I do not know what the best value of T is here.  Perhaps one should run a neural net on this to optimize for real data?
+		ret = optimize.basinhopping(fsq, xinit,T=2,niter=100,callback=callback_func,disp=kwargs['disp'])
 		if (ret.fun<tolerance):
 			skip_optimizing_with_differential_evolution = True
 			ret['findulam']="Computed with scipy.optimize.basinhopping"
@@ -143,35 +133,28 @@ def findulam(t,p,lat,long,**kwargs):
 	return(ret)
 
 
-
-
-# Todo: Option just to return those ulampoints within tolerance
-# Option for scaling of variables for the numerical method
-# Option as to what we return (do we return just the point or the entire output of the optimizemethod) 
-#
-
 def ulampoints(ds,**kwargs):
 	""" Calculates ulampoints from an xarray datasource from ECMWF
 	
 	Arguments
-	ds - ECMWF data source file	
+	ds - data source file with 3 indexed coordinates named step, longtitude and latitude
 
 	Optional Arguments
-	steps -  numpy.array of timedelta64 steps at which to calculate ulampoints.  If there are not equal to those in ds.step.data then the xarray interpolate will be used (default ds.steps.data)
+	steps -  numpy.array of timedelta64 steps at which to calculate ulampoints.  If these contain steps not in ds.step.data then the xarray interpolate will be used (default ds.steps.data)
 	tolerance - tolerance of the numerical method (default 1e-13)
 	
-	Returns: xarray object containing all the ulampoints found
+	Returns: xarray object containing all the ulampoints found within tolerance, for all distinct pairs of variables in the ds file
 	
 	Coordinates: steps
 			     non-coordinate variables of ds
 				 
 	Data variables: ulampoint_lat: the latitude location of the ulampoint (if numerical method succeeds within tolerance)
 					ulampoint_lon: the longtitude location of the ulampoint  (if numerical method succeeds within tolerance)
-					Optimizeresult: the details of the optimization result (type Optimizeresult)
+					Optimizeresult: the details of the optimization result (type Optimizeresult; included irrespective of success of numerical method)
 	"""
 
 	# Setup default arguments
-	defaultKwargs = {'tolerance': 1e-10, 'steps': ds.step.data}
+	defaultKwargs = {'tolerance': 1e-13, 'steps': ds.step.data}
 	kwargs = { **defaultKwargs, **kwargs }
 	steps = kwargs['steps']
 	tolerance = kwargs['tolerance']
@@ -186,22 +169,24 @@ def ulampoints(ds,**kwargs):
 	datasteps = ds.step.data
 	if datasteps.size ==1:
 		datasteps = numpy.reshape(datasteps,[1])
-		
+	
+	# Check that all the steps given are within the ds file
 	if max(steps)> max(datasteps) or min(steps)<min(datasteps):
 		raise Exception("All steps must be in the range included in the ds file")
 
-	
+	# Setup the DataArrays
 	da_lat = xr.DataArray(data=None,dims=['step','variable_1','variable_2'], coords = { 'step': steps,'variable_1': variables, 'variable_2': variables})
 	da_lon = xr.DataArray(data=None,dims=['step','variable_1','variable_2'], coords = { 'step': steps,'variable_1': variables, 'variable_2': variables})
 	da_opt = xr.DataArray(data=numpy.empty([steps.size,len(variables),len(variables)],dtype=object),dims=['step','variable_1','variable_2'], coords = { 'step': steps,'variable_1': variables, 'variable_2': variables})
 
 	#
-	# Now loop over pairs of variables (v1,v2) and timesteps
+	# Loop over pairs of variables (v1,v2) and steos
 	#
-	# Todo: Fixme for the initialguess
 
 	for v1 in range(len(variables)):	
 		for v2 in range(v1+1,len(variables)):
+		
+			# Choose a fudge factor in the numerical method to deal with the fact that one variable may be orders of magnitude different from the other
 			factor = ds[variables[v1]].data[0].mean() / ds[variables[v2]].data[0].mean()
 			logger.info('Calculating Ulampoints for variables: '+variables[v1]+' and '+variables[v2])
 			logger.debug('Factor used for the energy function '+str(factor))
@@ -236,7 +221,6 @@ def ulampoints(ds,**kwargs):
 					da_lat.loc[dict(step=steps[j],variable_1=variables[v2],variable_2=variables[v1])]=computedulam.x[0]
 					da_lon.loc[dict(step=steps[j],variable_1=variables[v1],variable_2=variables[v2])]=computedulam.x[1]
 					da_lon.loc[dict(step=steps[j],variable_1=variables[v2],variable_2=variables[v1])]=computedulam.x[1]
-				logger.debug(computedulam)
 				initialguess = computedulam.x
 	
 	# TODO I think there is a better way to include the time as a coordinate, but this will do for now
