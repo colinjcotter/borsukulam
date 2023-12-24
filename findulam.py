@@ -5,6 +5,7 @@ import scipy.interpolate as interpolate
 import scipy.optimize as optimize
 import json
 import logging
+import pdb
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +22,11 @@ def wraplatlong(x):
 
 def findulam(t,p,lat,long,**kwargs):
 	""" Numerically Computes an ulam point from two variables (classically temperature and pressure)
-	If an initialguess is given then start with the scipy.optimize.basinhopping method starting at this initialguess
+	
+	This is achieved by minimizing the energy functional defined to be (t(x)-t(-x))^2 + c^2 (p(x)-p(-x))^2 
+	where c is a constant and t and p are interpolated linearly in the lat and long directions.
+	
+	Method: If an initialguess is given then start with the scipy.optimize.basinhopping method starting at this initialguess.
 	If either initialguess is not given, or the basinhopping does not give an answer within tolerance
 	then use the scipy.optimize.differential_evolution method
 	
@@ -33,16 +38,20 @@ def findulam(t,p,lat,long,**kwargs):
 	disp (optional) - display steps of basinhoppin method (default false)
 	initialguess (optional) - initial point as [lat,long] for the numerical method
 	tolerance (optional) - the tolerance after which to stop the basinhopping method (default 1e-13)
-	factor (optional) - minimise the following function t(x)^2 + c^2 p(x)^2 where c=factor (default 1)
+	c (optional) - minimise the following function (t(x)-t(-x))^2 + c (p(x)-p(-x))^2 where c=factor.  (default c=1)
 	
-	Returns OptimizeResult of the final method used
+	Returns OptimizeResult of the final method used that includes the following
+	findulam: Description of which numerical method was used
+	x: numparray of lat/lon of ulampoint
+	fun:  (t(x)-t(-x))^2 + c (p(x)-p(-x))^2 at ulampoint
+	fun_without_factor: value of (t(x)-t(-x))^2 + c^2 (p(x)-p(-x))^2 at ulampoint
 	"""
 	
 	# Set default arguments
-	defaultKwargs = { 'tolerance': 1e-13, 'factor': 1, 'disp': false}
+	defaultKwargs = { 'tolerance': 1e-10,'c': 1, 'disp': False}
 	kwargs = { **defaultKwargs, **kwargs }
-	factor = kwargs['factor']
 	tolerance = kwargs['tolerance']
+	c = kwargs['c']
 	#get some dimension sizes
 	nlong = long.size
 
@@ -65,6 +74,7 @@ def findulam(t,p,lat,long,**kwargs):
 	#construct an interpolator
 	f = interpolate.RegularGridInterpolator((lat, long), t-t2,bounds_error=False)
 
+
 	## Pressure
 	#make a copy to contain the antipodal values
 	p2 = 0.*p
@@ -76,12 +86,16 @@ def findulam(t,p,lat,long,**kwargs):
 	p2 = numpy.flip(p2, axis=0)
 
 	#construct an interpolator
-
+	
 	fp = interpolate.RegularGridInterpolator((lat, long), p-p2,bounds_error=False)
-
+	
+	# Todo: Fixme set default value of c
+	#if c==None:
+	#	c = numpy.mean((t.flatten()-t2.flatten())**2) / numpy.mean((p.flatten()-p2.flatten())**2)
+	
 	#make a function for the square of the interpolator
 	def fsq(x):
-		return (factor**2)*(fp(wraplatlong(x))**2)+(f(wraplatlong(x))**2)
+		return c*(fp(wraplatlong(x))**2)+(f(wraplatlong(x))**2)
 	
 	def fsq_withoutfactor(x):
 		return (fp(wraplatlong(x))**2)+(f(wraplatlong(x))**2)
@@ -113,7 +127,7 @@ def findulam(t,p,lat,long,**kwargs):
 		logger.debug('Runnning basinhopping with initialguess '+str(kwargs['initialguess']))
 		
 		# I do not know what the best value of T is here.  Perhaps one should run a neural net on this to optimize for real data?
-		ret = optimize.basinhopping(fsq, xinit,T=2,niter=100,callback=callback_func,disp=kwargs['disp'])
+		ret = optimize.basinhopping(fsq, xinit,T=2,niter=100,callback=callback_func,disp=kwargs['disp']).lowest_optimization_result
 		if (ret.fun<tolerance):
 			skip_optimizing_with_differential_evolution = True
 			ret['findulam']="Computed with scipy.optimize.basinhopping"
@@ -126,21 +140,27 @@ def findulam(t,p,lat,long,**kwargs):
 	if skip_optimizing_with_differential_evolution==False:
 		logger.debug('Runnning differential_evolution')
 		bounds = [(-90.0,90.0),(-180.0,180.0)]	
-		ret = optimize.differential_evolution(fsq, bounds)
+		if 'initialguess' in kwargs:
+			xinit = numpy.array(kwargs['initialguess'])	
+		else:
+			xinit = [0,0]
+		ret = optimize.differential_evolution(fsq,bounds)
 		ret['findulam']="Computed with scipy.optimize.differential_evolution"
 		ret['fun_without_factor'] = fsq_withoutfactor(ret.x)
 	
 	return(ret)
 
 
+
+
 def ulampoints(ds,**kwargs):
-	""" Calculates ulampoints from an xarray datasource from ECMWF
+	""" Calculates ulampoints from an xarray datasource (e.g. from ECMWF)
 	
 	Arguments
 	ds - data source file with 3 indexed coordinates named step, longtitude and latitude
 
 	Optional Arguments
-	steps -  numpy.array of timedelta64 steps at which to calculate ulampoints.  If these contain steps not in ds.step.data then the xarray interpolate will be used (default ds.steps.data)
+	steps -  numpy.array of timedelta64 steps at which to calculate ulampoints.  If these contain elements not in ds.step.data then the xarray interpolate will be used (default ds.steps.data)
 	tolerance - tolerance of the numerical method (default 1e-13)
 	
 	Returns: xarray object containing all the ulampoints found within tolerance, for all distinct pairs of variables in the ds file
@@ -148,13 +168,13 @@ def ulampoints(ds,**kwargs):
 	Coordinates: steps
 			     non-coordinate variables of ds
 				 
-	Data variables: ulampoint_lat: the latitude location of the ulampoint (if numerical method succeeds within tolerance)
-					ulampoint_lon: the longtitude location of the ulampoint  (if numerical method succeeds within tolerance)
-					Optimizeresult: the details of the optimization result (type Optimizeresult; included irrespective of success of numerical method)
+	Data variables: ulampoint_lat: the latitude location of the ulampoint (if numerical method succeeds within tolerance else None)
+					ulampoint_lon: the longtitude location of the ulampoint  (if numerical method succeeds within tolerance else None)
+					Optimizeresult: details of the optimization result (type Optimizeresult; included irrespective of success of numerical method)
 	"""
 
 	# Setup default arguments
-	defaultKwargs = {'tolerance': 1e-13, 'steps': ds.step.data}
+	defaultKwargs = {'tolerance': 1e-10, 'steps': ds.step.data}
 	kwargs = { **defaultKwargs, **kwargs }
 	steps = kwargs['steps']
 	tolerance = kwargs['tolerance']
@@ -185,12 +205,8 @@ def ulampoints(ds,**kwargs):
 
 	for v1 in range(len(variables)):	
 		for v2 in range(v1+1,len(variables)):
-		
-			# Choose a fudge factor in the numerical method to deal with the fact that one variable may be orders of magnitude different from the other
-			factor = ds[variables[v1]].data[0].mean() / ds[variables[v2]].data[0].mean()
 			logger.info('Calculating Ulampoints for variables: '+variables[v1]+' and '+variables[v2])
-			logger.debug('Factor used for the energy function '+str(factor))
-
+			
 
 			for j in range(steps.size):	
 			
@@ -202,6 +218,7 @@ def ulampoints(ds,**kwargs):
 							
 				parameters = {
 				'tolerance':tolerance,
+				'c': 1,
 				}
 				
 				if j>0:
@@ -211,7 +228,7 @@ def ulampoints(ds,**kwargs):
 				p = data0[variables[v2]].data
 
 				computedulam = findulam(t,p,ds['latitude'],ds['longitude'],**parameters)
-				logger.info('Ulampoint for step '+str(steps[j])+' : '+str([computedulam.x[0],computedulam.x[1]]))
+				logger.info('Ulampoint for step '+str(steps[j])+' : '+str([computedulam.x[0],computedulam.x[1]])+' fun: '+str(computedulam.fun)+' fun_without_factor: '+str(computedulam.fun_without_factor)+' findulammethod: '+ str(computedulam.findulam))
 				
 				# Add to the xarray
 				da_opt.loc[dict(step=steps[j],variable_1=variables[v1],variable_2=variables[v2])]=computedulam
