@@ -30,10 +30,36 @@ The following will give you the ulampoints for all pairs of parameters in the ds
 import findulam
 import xarray as xr
 ds = xr.open_dataset('data.grib2',engine='cfgrib')
+
+<xarray.Dataset>
+Dimensions:            (step: 2, latitude: 451, longitude: 900)
+Coordinates:
+    number             int64 ...
+    time               datetime64[ns] ...
+  * step               (step) timedelta64[ns] 00:00:00 06:00:00
+    heightAboveGround  float64 ...
+  * latitude           (latitude) float64 90.0 89.6 89.2 ... -89.2 -89.6 -90.0
+  * longitude          (longitude) float64 -180.0 -179.6 -179.2 ... 179.2 179.6
+    valid_time         (step) datetime64[ns] ...
+    meanSea            float64 ...
+    surface            float64 ...
+Data variables:
+    t2m                (step, latitude, longitude) float32 ...
+    msl                (step, latitude, longitude) float32 ...
+    sp                 (step, latitude, longitude) float32 ...
+Attributes:
+    GRIB_edition:            2
+    GRIB_centre:             ecmf
+    GRIB_centreDescription:  European Centre for Medium-Range Weather Forecasts
+    GRIB_subCentre:          0
+    Conventions:             CF-1.7
+    institution:             European Centre for Medium-Range Weather Forecasts
+    history:                 2023-12-23T20:38 GRIB to CDM+CF via cfgrib-0.9.1...
 ```
 
-Note: The library is expecting only two coordinates named longtitude and latitude (marked with a * here).  If more are present the select one using ds.sel(...)
+The library is expecting only 3 indexed coordinates named step, longtitude and latitude.  If more are present in the datasource file then select along those coordinates using ds.sel(...)
 
+```python
 ulampoints = findulam.ulampoints(ds)
 print(ulampoints)
 
