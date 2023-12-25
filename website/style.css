@@ -1,15 +1,16 @@
 
 :root {
-  --light-green: rgb(249,210,128); /* Custom property for a primary color */
+  --light-green: rgb(255,165,0);
   --dark-green: rgb(149,210,128); /* Custom property for an accent color */
 }
 
 
 
-    body {
-      margin: 0px;
-      font-family: "DIN Pro Regular";
-    }
+body {
+  margin: 0px;
+  font-family: "DIN Pro Regular";
+	overflow: hidden; /* Hide horizontal scrollbar */
+}
 
 a {
   color: blue;
@@ -54,6 +55,7 @@ text-transform: uppercase;
   border-right: none;
   border-width: 1pt;
   background-color:rgb(47,76,109);
+   overflow-x: hidden; /* Hide horizontal scrollbar */
 }
 
 
@@ -66,15 +68,29 @@ text-transform: uppercase;
   width: 50%;    
   border-right: none;
   background-color:rgb(47,76,109);
+  overflow-x: hidden; /* Hide horizontal scrollbar */
 }
 
 
-
+.disabled
+{
+position: absolute;
+background-color: white;
+top: 10%;
+height: 50px;
+width: 80%;
+left: 10%;
+opacity: 0.8;
+text-align: center;
+visibility: hidden;
+pointer-events: none;
+Z-index: 100;
+}
     
 .timer {
 position: absolute;
 text-align: center;
-bottom: 0pt;
+bottom: 10pt;
 left: 5%;
 width: 90%;
 height: 15pt;
@@ -90,18 +106,20 @@ width: 70%;
 height: 100%;
 Z-index: 10;
  border-style: none;
+ overflow-x: hidden; /* Hide horizontal scrollbar */
 }
     
 
     
     
 #map2 .mapbox-logo{ display: none !important; } 
-#map2 .mapboxgl-ctrl-logo { display: none !important; } 
+#map2 .bu-controls-logo { display: none !important; } 
 #mao2 .mapbox-improve-map { display: none; } 
-#map2 .mapboxgl-ctrl-compass { display: none; }
+#map2 .bu-controls-compass { display: none; }
 
 .blurbcontainer{
 	  position: absolute;
+	  background-color: white;
       left:70%;
       width: 30%;
       height: 100%;
@@ -109,22 +127,18 @@ Z-index: 10;
       border-style: none;
 }
 
-.verticalbar {
-position: absolute;
-right: -2;
-background-color: white;
-border-style: none;
-width: 15px;
-height: 100%;
+
+#map2 .mapboxgl-ctrl-logo {
+    display: none !important;
 }
 
 .blurb {
 position: relative;
- border-style: none;
-left: 5px;
+border-style: none;
+left: 0px;
 width: 100%;
       background-color:white;
-      padding-top: 10px;
+      padding-top: 30px;
       padding-bottom: 20px;
       position: absolute;
       height: 95%;
@@ -138,28 +152,18 @@ width: 100%;
            linear-gradient(to left, black 15px, transparent 6px); /* not masked area for scrollbar */
     }
 
-  
-.marker {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  cursor: pointer;
-  cursor: crosshair
-}
-
-
 
 
 .highlight{
-  box-shadow: 0px 0px 50px 25px yellow, -5px -5px 15px 3px rgba(244,250,80,0.8) !important;
+  box-shadow: 0px 0px 60px 45px rgba(244,250,80,0.9) !important;
 }
 
 .highlight_temp{
-  box-shadow: 0px 0px 20px 15px rgba(244,250,80,0.6) !important;
+  box-shadow: 0px 0px 20px 15px rgba(237,21,65,0.8) !important;
 }
 
 .highlight_pressure{
-  box-shadow: 0px 0px 20px 15px rgba(59,143,227,0.6) !important; 
+  box-shadow: 0px 0px 20px 15px rgba(78,3,252, 0.8) !important; 
 }
 
 .debug{
@@ -170,8 +174,22 @@ width: 100%;
 	display: none;
 }
 
-.mapboxgl-marker {
-cursor: crosshair
+.marker {
+/*background-image: url('https://s3.us-east-2.amazonaws.com/julius-ross.com/Borsuk-Ulam/circle-stroked-blue.svg'); */
+background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 25 25" height="25" width="25"><title>circle-stroked.svg</title><rect fill="none" x="0" y="0" width="25" height="25"></rect><rect x="3" y="3" rx="9.5" ry="9.5" width="19" height="19" stroke="%23e3e3e3" style="stroke-linejoin:round;stroke-miterlimit:4;" fill="%23e3e3e3" stroke-width="6"></rect><rect x="3" y="3" width="19" height="19" rx="9.5" ry="9.5" fill="%231100ff"></rect><path fill="%23ffffff" transform="translate(5 5)" d="M7.5,0C11.6422,0,15,3.3578,15,7.5S11.6422,15,7.5,15S0,11.6422,0,7.5S3.3578,0,7.5,0z M7.5,1.6666c-3.2217,0-5.8333,2.6117-5.8333,5.8334S4.2783,13.3334,7.5,13.3334s5.8333-2.6117,5.8333-5.8334S10.7217,1.6666,7.5,1.6666z"></path></svg>');
+cursor: crosshair;
+background-size: cover;
+width: 16px;
+height: 16px;
+}
+
+.marker2 {
+/*background-image: url('https://s3.us-east-2.amazonaws.com/julius-ross.com/Borsuk-Ulam/circle-stroked-brown.svg');*/
+background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 25 25" height="25" width="25"><title>circle-stroked.svg</title><rect fill="none" x="0" y="0" width="25" height="25"></rect><rect x="3" y="3" rx="9.5" ry="9.5" width="19" height="19" stroke="%23e3e3e3" style="stroke-linejoin:round;stroke-miterlimit:4;" fill="%23e3e3e3" stroke-width="6"></rect><rect x="3" y="3" width="19" height="19" rx="9.5" ry="9.5" fill="%238b4513"></rect><path fill="%23ffffff" transform="translate(5 5)" d="M7.5,0C11.6422,0,15,3.3578,15,7.5S11.6422,15,7.5,15S0,11.6422,0,7.5S3.3578,0,7.5,0z M7.5,1.6666c-3.2217,0-5.8333,2.6117-5.8333,5.8334S4.2783,13.3334,7.5,13.3334s5.8333-2.6117,5.8333-5.8334S10.7217,1.6666,7.5,1.6666z"></path></svg>');
+cursor: crosshair;
+background-size: cover;
+width: 16px;
+height: 16px;
 }
 
 .mapboxgl-canvas {
@@ -340,14 +358,7 @@ opacity: 0.8;
   padding-top: 70px;
 }
 
-.smallarrow {
-  position: absolute;
-  border: solid grey;
-  border-width: 0 3px 3px 0;
-  display: inline-block;
-  padding: 3px;
-  top: 50%;
-}
+
 
 .right {
   transform: rotate(-45deg);
@@ -355,7 +366,7 @@ opacity: 0.8;
 }
 
 .left {
-  left: 4px;
+  left: 9px;
   transform: rotate(135deg);
   -webkit-transform: rotate(135deg);
 }
@@ -432,3 +443,36 @@ opacity: 0.8;
     overflow: hidden; /* Hide the content that overflows during the animation */
     animation: collapse 1s ease-in-out forwards; /* Adjust the duration as needed (e.g., 3s) */
 }
+
+
+.fullscreen-button  {
+  background-repeat: no-repeat;
+  background-position: center;
+  pointer-events: auto;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg width='24' height='24' viewBox='0 0 29 29' xmlns='http://www.w3.org/2000/svg' fill='%23333'%3E%3Cpath d='M24 16v5.5c0 1.75-.75 2.5-2.5 2.5H16v-1l3-1.5-4-5.5 1-1 5.5 4 1.5-3h1zM6 16l1.5 3 5.5-4 1 1-4 5.5 3 1.5v1H7.5C5.75 24 5 23.25 5 21.5V16h1zm7-11v1l-3 1.5 4 5.5-1 1-5.5-4L6 13H5V7.5C5 5.75 5.75 5 7.5 5H13zm11 2.5c0-1.75-.75-2.5-2.5-2.5H16v1l3 1.5-4 5.5 1 1 5.5-4 1.5 3h1V7.5z'/%3E%3C/svg%3E")
+}
+
+.shrink-button {
+  background-repeat: no-repeat;
+    background-position: center;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg width='24' height='24' viewBox='0 0 29 29' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M18.5 16c-1.75 0-2.5.75-2.5 2.5V24h1l1.5-3 5.5 4 1-1-4-5.5 3-1.5v-1h-5.5zM13 18.5c0-1.75-.75-2.5-2.5-2.5H5v1l3 1.5L4 24l1 1 5.5-4 1.5 3h1v-5.5zm3-8c0 1.75.75 2.5 2.5 2.5H24v-1l-3-1.5L25 5l-1-1-5.5 4L17 5h-1v5.5zM10.5 13c1.75 0 2.5-.75 2.5-2.5V5h-1l-1.5 3L5 4 4 5l4 5.5L5 12v1h5.5z'/%3E%3C/svg%3E")
+}
+
+.expander-button {
+  background-repeat: no-repeat;
+  background-position: center;
+  pointer-events: auto;
+  background-image: url(
+  "data:image/svg+xml;charset=utf-8,%3Csvg width='24' height='24' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg' fill='%23000'%3E%3Cpath d='M15.5 12c0-.3-.1-.6-.3-.9L9.2 5.4c-.4-.4-1-.4-1.4 0s-.4 1 0 1.4l5.3 5.3-5.3 5.3c-.4.4-.4 1 0 1.4s1 .4 1.4 0l6.1-6.1c.2-.3.3-.6.3-.9z'/%3E%3C/svg%3E");
+}
+
+
+.fliparrow{
+    transform: rotate(180deg);
+    left: 2px
+}
+
+
+
+
+
