@@ -169,7 +169,6 @@ def ulampoints(ds,**kwargs):
 	# Take all the variables in the ds files that are not coordinates
 	variables = [var for var in ds.data_vars if var not in ds.coords]
 	
-
 	# If there is only one step given then make it into an array	
 	if steps.size ==1:
 		steps = numpy.reshape(steps,[1])

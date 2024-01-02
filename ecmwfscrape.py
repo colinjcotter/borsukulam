@@ -121,7 +121,7 @@ ds = xr.open_dataset(grib2file,engine='cfgrib')
 
 logger.info('Finding ulampoints')
 N=args.N
-steparray = [(1-i/N)*firststep +(i/N)*laststep for i in range(N)]
+steparray = numpy.array([(1-i/N)*firststep +(i/N)*laststep for i in range(N)])
 
 # Add the interpolated values back to the original array
 ds_interp=ds.interp(step=[firststep,laststep])
@@ -141,8 +141,6 @@ logger.info('Finding ulampoints completed in '+str(time.time()-start)+'s')
 ulamarray = ulamarray.sel(variable_1='t2m',variable_2='msl')
 # Make an appropriate list of all the ulampoints that (ignoring those that are 'None')
 ulamlist_cropped = [[numpy.timedelta64(ulamarray.step.data[i], 's').astype(float),[ulamarray.ulampoint_lat.data[i],ulamarray.ulampoint_lon.data[i]]] for i in range(len(ulamarray.step.data)) if ulamarray.ulampoint_lat.data[i]!=None]
-
-pdb.set_trace()
 
 
 logger.info('timstep length'+ str(len(ulamarray.step.data))+ ' of which '+ str(len(ulamlist_cropped))+ ' ulampoints were found within tolerance')
