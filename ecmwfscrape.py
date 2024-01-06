@@ -74,7 +74,7 @@ logger = logging.getLogger(__name__)
 #ConsoleOutputHandler = logging.StreamHandler()
 #ConsoleOutputHandler.setLevel(logging.DEBUG)
 #logger.addHandler(ConsoleOutputHandler)
-#logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.DEBUG)
 
 # Initialize Data
 bu_local_directory  = args.bu_local_directory
