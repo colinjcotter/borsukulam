@@ -67,14 +67,14 @@ p.add('--verbose',type=int, default=0)
 args= p.parse_args()
 
 #
-# Setup logger
+# Setup logger (need to make it an option to output to console; has it stopped logging to the file?)
 #
 logging.basicConfig(filename = args.logfile,format='%(asctime)s %(levelname)s  %(message)s',datefmt='%Y-%m-%d %H:%M:%S')
 logger = logging.getLogger(__name__)
-ConsoleOutputHandler = logging.StreamHandler()
-ConsoleOutputHandler.setLevel(logging.DEBUG)
-logger.addHandler(ConsoleOutputHandler)
-logger.setLevel(logging.DEBUG)
+#ConsoleOutputHandler = logging.StreamHandler()
+#ConsoleOutputHandler.setLevel(logging.DEBUG)
+#logger.addHandler(ConsoleOutputHandler)
+#logger.setLevel(logging.DEBUG)
 
 # Initialize Data
 bu_local_directory  = args.bu_local_directory
@@ -192,7 +192,7 @@ f.close
 
 bu_datafile_url = bu_local_directory+'bu-latest-data-pointer.js'
 with open(bu_datafile_url, 'w') as file:
-	file.write('var bulatestdataurl="'+args.bufile_url+bu_filename+'.gz"')
+	file.write('var bulatestdataurl='+args.bufile_url+bu_filename+'.gz"')
 	
 #
 # Move the files to the S3 buckets
