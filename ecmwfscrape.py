@@ -192,7 +192,7 @@ f.close
 
 bu_datafile_url = bu_local_directory+'bu-latest-data-pointer.js'
 with open(bu_datafile_url, 'w') as file:
-	file.write('var bulatestdataurl='+args.bufile_url+bu_filename+'.gz"')
+	file.write('var bulatestdataurl="'+args.bufile_url+bu_filename+'.gz"')
 	
 #
 # Move the files to the S3 buckets
