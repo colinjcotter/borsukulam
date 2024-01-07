@@ -68,32 +68,19 @@ p.add('--verbose',type=int, default=0)
 args= p.parse_args()
 
 #
-# Setup logger (need to make it an option to output to console; has it stopped logging to the file?)
+# Setup logger
 #
 numeric_level = getattr(logging, args.loglevel.upper(), None)
 if not isinstance(numeric_level, int):
     raise ValueError('Invalid log level: %s' % loglevel)
-
-
 logger = logging.getLogger(__name__)
-
-
 formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 logger.setLevel(numeric_level)
-
 if args.logfile!=None:
 	logging.basicConfig(filename=args.logfile,format='%(asctime)s - %(levelname)s - %(message)s',level=numeric_level)
-	#file_handler = logging.FileHandler()
-	#file_handler.setLevel(numeric_level)  
-	#file_handler.setFormatter(formatter)
-	#logger.addHandler(file_handler)
 else:
 	logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s',level=numeric_level)
 
-	#stream_handler = logging.StreamHandler()
-	#stream_handler.setFormatter(formatter)
-	#stream_handler.setLevel(numeric_level) 
-	#logger.addHandler(stream_handler)
 
 
 # Initialize Data
