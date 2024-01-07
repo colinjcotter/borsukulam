@@ -85,10 +85,8 @@ else:
 
 # Initialize Data
 bu_local_directory  = args.bu_local_directory
-
-## TODO: This is silly, I should use the numpy function to do this
-firststep = numpy.timedelta64(args.firststep*3600000000000,'ns')
-laststep = numpy.timedelta64(args.laststep*3600000000000,'ns')
+firststep = numpy.timedelta64(args.firststep,'h').astype('timedelta64[ns]')
+laststep = numpy.timedelta64(args.laststep,'h').astype('timedelta64[ns]')
 
 #
 # Get data from ECMWF
@@ -122,11 +120,6 @@ ds = xr.open_dataset(grib2file,engine='cfgrib')
 #
 
 
-#
-# Fixme: First we want to interpolate to create a new xarray with precisely two steps
-# Then we feed an array of timedelta64 into findulam.ulampoints
-#
-
 logger.info('Finding ulampoints')
 N=args.N
 steparray = numpy.array([(1-i/N)*firststep +(i/N)*laststep for i in range(N)])
@@ -144,14 +137,12 @@ logger.info('Finding ulampoints completed in '+str(time.time()-start)+'s')
 # Also we throw away those ulampoints not within a tolerances of 1e-8
 
 
-
-
 ulamarray = ulamarray.sel(variable_1='t2m',variable_2='msl')
 # Make an appropriate list of all the ulampoints that (ignoring those that are 'None')
 ulamlist_cropped = [[numpy.timedelta64(ulamarray.step.data[i], 's').astype(float),[ulamarray.ulampoint_lat.data[i],ulamarray.ulampoint_lon.data[i]]] for i in range(len(ulamarray.step.data)) if ulamarray.ulampoint_lat.data[i]!=None]
 
 
-logger.info('timstep length'+ str(len(ulamarray.step.data))+ ' of which '+ str(len(ulamlist_cropped))+ ' ulampoints were found within tolerance')
+logger.info('timstep length '+ str(len(ulamarray.step.data))+ ' of which '+ str(len(ulamlist_cropped))+ ' ulampoints were found within tolerance')
 
 bu_filename = 'bu-'+numpy.datetime_as_string(ds.time.data,'D')+'T'+ str(args.time)+'h:'+str(args.firststep)+':'+str(args.laststep)+'.js'
 bu_ulampoints_filename = 'bu-ulampoints-'+numpy.datetime_as_string(ds.time.data,'D')+'T'+ str(args.time)+'h:'+str(args.firststep)+':'+str(args.laststep)+'.js'

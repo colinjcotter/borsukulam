@@ -129,11 +129,11 @@ def findulam(t,p,lat,long,**kwargs):
 	if skip_optimizing_with_differential_evolution==False:
 		logging.debug('Runnning differential_evolution')
 		bounds = [(-90.0,90.0),(-180.0,180.0)]	
-		if 'initialguess' in kwargs:
-			xinit = numpy.array(kwargs['initialguess'])	
-		else:
-			xinit = [0,0]
-		ret = optimize.differential_evolution(fsq,bounds)
+		#if 'initialguess' in kwargs:
+		#	xinit = numpy.array(kwargs['initialguess'])	
+		#else:
+		xinit = [0,0]
+		ret = optimize.differential_evolution(fsq,bounds,disp=kwargs['disp'])
 		ret['findulam']="Computed with scipy.optimize.differential_evolution"
 		ret['fun_without_factor'] = fsq_withoutfactor(ret.x)
 	
@@ -216,7 +216,7 @@ def ulampoints(ds,**kwargs):
 				p = data0[variables[v2]].data
 
 				computedulam = findulam(t,p,ds['latitude'],ds['longitude'],**parameters)
-				logging.info('Ulampoint for step '+str(steps[j])+' : '+str([computedulam.x[0],computedulam.x[1]])+' fun: '+str(computedulam.fun)+' fun_without_factor: '+str(computedulam.fun_without_factor)+' findulammethod: '+ str(computedulam.findulam))
+				logging.debug('Ulampoint for step at around'+str(steps[j].astype('timedelta64[m]'))+' : '+str([computedulam.x[0],computedulam.x[1]])+' fun: '+str(computedulam.fun)+' fun_without_factor: '+str(computedulam.fun_without_factor)+' findulammethod: '+ str(computedulam.findulam))
 				
 				# Add to the xarray
 				da_opt.loc[dict(step=steps[j],variable_1=variables[v1],variable_2=variables[v2])]=computedulam
