@@ -1,12 +1,13 @@
+import logging 
 import netCDF4
 import xarray as xr
 import numpy
 import scipy.interpolate as interpolate
 import scipy.optimize as optimize
 import json
-import logging
+import pdb
 
-logger = logging.getLogger(__name__)
+logger= logging.getLogger(__name__)
 
 # Functions to wrap longitude and latitude
 def wraplat(t):
@@ -112,7 +113,7 @@ def findulam(t,p,lat,long,**kwargs):
 	
 	if 'initialguess' in kwargs:
 		xinit = numpy.array(kwargs['initialguess'])	
-		logger.debug('Runnning basinhopping with initialguess '+str(kwargs['initialguess']))
+		logging.debug('Runnning basinhopping with initialguess '+str(kwargs['initialguess']))
 		
 		# I do not know what the best value of T is here.  Perhaps one should run a neural net on this to optimize for real data?
 		ret = optimize.basinhopping(fsq, xinit,T=2,niter=100,callback=callback_func,disp=kwargs['disp']).lowest_optimization_result
@@ -121,12 +122,12 @@ def findulam(t,p,lat,long,**kwargs):
 			ret['findulam']="Computed with scipy.optimize.basinhopping"
 			ret['fun_without_factor'] = fsq_withoutfactor(ret.x)
 		else:
-			logger.debug('Basinhopping failed to get within tolerance')
-			logger.debug('Basinhopping Optimizeresult:')
-			logger.debug(ret)
+			logging.debug('Basinhopping failed to get within tolerance')
+			logging.debug('Basinhopping Optimizeresult:')
+			logging.debug(ret)
 			
 	if skip_optimizing_with_differential_evolution==False:
-		logger.debug('Runnning differential_evolution')
+		logging.debug('Runnning differential_evolution')
 		bounds = [(-90.0,90.0),(-180.0,180.0)]	
 		if 'initialguess' in kwargs:
 			xinit = numpy.array(kwargs['initialguess'])	
@@ -160,8 +161,8 @@ def ulampoints(ds,**kwargs):
 					ulampoint_lon: the longtitude location of the ulampoint  (if numerical method succeeds within tolerance else None)
 					Optimizeresult: details of the optimization result (type Optimizeresult; included irrespective of success of numerical method)
 	"""
-
 	# Setup default arguments
+	
 	defaultKwargs = {'tolerance': 1e-10, 'steps': ds.step.data}
 	kwargs = { **defaultKwargs, **kwargs }
 	steps = kwargs['steps']
@@ -192,7 +193,7 @@ def ulampoints(ds,**kwargs):
 
 	for v1 in range(len(variables)):	
 		for v2 in range(v1+1,len(variables)):
-			logger.info('Calculating Ulampoints for variables: '+variables[v1]+' and '+variables[v2])
+			logging.info('Calculating Ulampoints for variables: '+variables[v1]+' and '+variables[v2])
 			
 
 			for j in range(steps.size):	
@@ -215,7 +216,7 @@ def ulampoints(ds,**kwargs):
 				p = data0[variables[v2]].data
 
 				computedulam = findulam(t,p,ds['latitude'],ds['longitude'],**parameters)
-				logger.info('Ulampoint for step '+str(steps[j])+' : '+str([computedulam.x[0],computedulam.x[1]])+' fun: '+str(computedulam.fun)+' fun_without_factor: '+str(computedulam.fun_without_factor)+' findulammethod: '+ str(computedulam.findulam))
+				logging.info('Ulampoint for step '+str(steps[j])+' : '+str([computedulam.x[0],computedulam.x[1]])+' fun: '+str(computedulam.fun)+' fun_without_factor: '+str(computedulam.fun_without_factor)+' findulammethod: '+ str(computedulam.findulam))
 				
 				# Add to the xarray
 				da_opt.loc[dict(step=steps[j],variable_1=variables[v1],variable_2=variables[v2])]=computedulam
