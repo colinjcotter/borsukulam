@@ -3,7 +3,7 @@ Script to scrape ECMWF data, calculate ulam points, and create some javascript f
 to be used with the Borsuk-Ulam explorer website
 
 Typical Usage: 
-python3 ecmwfscrape.py --firststep 0 --laststep 12 --date 0 --time 6 --N 720
+python3 ecmwfscrape.py --firststep 0 --laststep 12 --date 0 --time 6 --N 720 --step 0 12
 
 This will get create and save ulampoints every minute in a 12 hour period of the forecast starting today at 06:00UTC
 
@@ -101,7 +101,7 @@ if (args.grib2 ==None):
 	client = Client()
 	result  = client.retrieve(
 		step = list(args.step),
-		type="cf",
+		type="fc",
 		param = ["2t","msl"],
 		date = args.date,
 		time = args.time,
@@ -110,7 +110,6 @@ if (args.grib2 ==None):
 	grib2file = args.grib2_filename
 else:
 	grib2file = args.grib2
-
 
 logger.info("Opening grib2 file")
 ds = xr.open_dataset(grib2file,engine='cfgrib')
