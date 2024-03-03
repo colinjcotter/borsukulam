@@ -42,23 +42,23 @@ function getclimatevariables(p)
 
 
 	// get the ll grid coordinate (i,j) wrapping correctly
-	var i = Math.floor(y/0.4)
-	if (i==900){ i=0 } 
+	var i = Math.floor(y/0.25)
+	if (i==1440){ i=0 } 
 
-	var j = Math.floor(x/0.4)
-	if (j==450){ j=0}  
+	var j = Math.floor(x/0.25)
+	if (j==720){ j=0}  
 
 	// get the ur grid coordinate (ip,jp) wrapping correctly
 	var ip = i+1
 	var jp = j+1	
-	if (ip==900){ ip=0 } 
-	if (jp==450){ jp=0 } 
+	if (ip==1440){ ip=0 } 
+	if (jp==720){ jp=0 } 
 
 
 
 	// get the distance to the grid coordinate
-	var a = x/0.4-j
-	var b = y/0.4-i
+	var a = x/0.25-j
+	var b = y/0.25-i
 
 
 	// temperature and pressure
